@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>North America Explorer Quiz</title>
+<style>
+  :root{
+    --ink:#1c2b28;
+    --paper:#f4ede0;
+    --panel:#ffffff;
+    --teal:#b3271e;
+    --teal-dark:#7a1815;
+    --coral:#e0672f;
+    --sand:#e8d9b8;
+    --line:#d8c9a8;
+    --ok:#2f8f4e;
+    --bad:#c8452e;
+    --map-water:#bfe0e3;
+    --map-land:#a9cf9e;
+    --map-land-line:#5c8a63;
+    --shadow: 0 10px 26px rgba(19,75,72,0.16);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#eef2ee;
+      --paper:#12201d;
+      --panel:#182b27;
+      --teal:#e2695c;
+      --teal-dark:#c1453a;
+      --coral:#f0a56d;
+      --sand:#20342f;
+      --line:#2c453e;
+      --ok:#63c98a;
+      --bad:#f0836f;
+      --map-water:#0f2b30;
+      --map-land:#254d34;
+      --map-land-line:#4d8a5f;
+      --shadow: 0 10px 26px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#eef2ee;
+    --paper:#12201d;
+    --panel:#182b27;
+    --teal:#e2695c;
+    --teal-dark:#c1453a;
+    --coral:#f0a56d;
+    --sand:#20342f;
+    --line:#2c453e;
+    --ok:#63c98a;
+    --bad:#f0836f;
+    --map-water:#0f2b30;
+    --map-land:#254d34;
+    --map-land-line:#4d8a5f;
+    --shadow: 0 10px 26px rgba(0,0,0,0.4);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: 'Iowan Old Style', 'Georgia', ui-serif, serif;
+    min-height:100vh;
+  }
+  .wrap{ max-width:820px; margin:0 auto; padding:28px 18px 60px; }
+
+  header{ display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+  .compass{ width:56px; height:56px; flex:none; }
+  h1{ font-size:1.7rem; line-height:1.15; margin:0; }
+  .kicker{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:0.82rem; color:var(--teal); margin:0 0 4px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:26px; }
+
+  .cat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px; }
+  @media (max-width:480px){ .cat-grid{ grid-template-columns:1fr; } }
+  .cat-btn{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; text-align:left; background:var(--sand); border:1px solid var(--line); border-radius:10px; padding:16px; cursor:pointer; color:var(--ink); transition:transform .12s ease, box-shadow .12s ease; }
+  .cat-btn:hover{ transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,0.12); }
+  .cat-btn .emoji{ font-size:1.6rem; display:block; margin-bottom:6px; }
+  .cat-btn .name{ font-weight:700; font-size:1rem; }
+  .cat-btn .count{ font-size:0.8rem; opacity:0.7; }
+
+  .progress-row{ display:flex; align-items:center; justify-content:space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:0.82rem; color:var(--teal-dark); margin-bottom:10px; }
+  .bar{ height:6px; background:var(--sand); border-radius:4px; overflow:hidden; margin-bottom:20px; }
+  .bar > div{ height:100%; background:var(--coral); transition:width .3s ease; }
+  .qtag{ display:inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:0.72rem; background:var(--teal); color:#fff; padding:3px 10px; border-radius:999px; margin-bottom:14px; }
+  .question{ font-size:1.25rem; line-height:1.35; margin:0 0 14px; }
+
+  .board-wrap{
+    background:var(--sand);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 14px 10px;
+    margin-bottom:18px;
+    text-align:center;
+  }
+  .board-caption{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:0.75rem;
+    color:var(--teal-dark);
+    margin-bottom:8px;
+    font-weight:600;
+  }
+  .board-legend{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-top:8px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:0.7rem;
+    color:var(--ink);
+    opacity:0.85;
+  }
+  .board-legend .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+  .board-legend .dot.current{ background:var(--coral); }
+  .board-legend .dot.correct{ background:var(--ok); }
+  .board-legend .dot.wrong{ background:var(--bad); }
+  .board-legend .dot.unvisited{ background:var(--map-land); border:1px solid var(--map-land-line); }
+
+  .clue-row{ display:flex; justify-content:center; margin-bottom:4px; }
+  .visual-box{
+    background:var(--sand);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+    text-align:center;
+    width:220px;
+  }
+  .visual-box .cap{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:0.72rem;
+    color:var(--teal-dark);
+    margin-top:6px;
+    letter-spacing:0.2px;
+  }
+  .visual-box svg{ width:100%; max-width:190px; height:auto; display:block; margin:0 auto; }
+  .visual-box.flag svg{ max-width:140px; border-radius:4px; overflow:hidden; border:1px solid var(--line); }
+  .real-photo.flag-photo{ max-width:170px; height:113px; object-fit:contain; background:#fff; }
+  .real-photo{ width:100%; max-width:190px; height:140px; object-fit:cover; border-radius:8px; display:block; margin:0 auto; border:1px solid var(--line); }
+  .map-svg{ width:100%; max-width:480px; height:auto; display:block; margin:0 auto; }
+  .map-svg.inset{ max-width:220px; margin-top:10px; }
+  .inset-label{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:0.7rem; color:var(--teal-dark); text-align:center; margin-top:12px; opacity:0.8; }
+  .map-dot{ fill:var(--teal); opacity:0.45; }
+  .map-dot.active{ fill:var(--coral); opacity:1; }
+  .map-label{ font-size:12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight:700; fill:var(--ink); text-anchor:middle; }
+  .map-label.small{ font-size:9px; }
+
+  .options{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  .opt{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; text-align:left; background:var(--panel); border:1.5px solid var(--line); border-radius:10px; padding:13px 15px; font-size:1rem; color:var(--ink); cursor:pointer; }
+  .opt:hover{ border-color:var(--teal); }
+  .opt.correct{ border-color:var(--ok); background:rgba(47,143,78,0.12); font-weight:700; }
+  .opt.wrong{ border-color:var(--bad); background:rgba(200,69,46,0.12); }
+  .opt[disabled]{ cursor:default; }
+
+  .explain{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:0.92rem; margin-top:16px; padding:12px 14px; background:var(--sand); border-radius:10px; display:none; }
+
+  .nextbar{ display:flex; justify-content:flex-end; margin-top:18px; }
+  button.primary{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:var(--teal-dark); color:#fff; border:none; border-radius:9px; padding:11px 22px; font-size:0.95rem; cursor:pointer; display:none; }
+  button.primary:hover{ background:var(--teal); }
+
+  .score-big{ font-size:2.6rem; font-weight:700; text-align:center; margin:4px 0 2px; }
+  .score-sub{ text-align:center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color:var(--teal-dark); margin-bottom:20px; }
+  .breakdown{ display:flex; flex-direction:column; gap:8px; margin:18px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .breakdown-row{ display:flex; justify-content:space-between; padding:8px 12px; background:var(--sand); border-radius:8px; font-size:0.9rem; }
+  .actions{ display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; }
+  button.ghost{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:transparent; border:1.5px solid var(--teal); color:var(--teal-dark); border-radius:9px; padding:10px 18px; cursor:pointer; font-size:0.92rem; }
+
+  .hidden{ display:none !important; }
+  footer{ text-align:center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:0.78rem; color:var(--teal-dark); opacity:0.7; margin-top:26px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <svg class="compass" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="var(--teal-dark)" stroke-width="3"/>
+      <circle cx="50" cy="50" r="3" fill="var(--coral)"/>
+      <polygon points="50,10 58,50 50,46" fill="var(--coral)"/>
+      <polygon points="50,90 42,50 50,54" fill="var(--teal-dark)"/>
+      <text x="50" y="24" font-size="9" text-anchor="middle" fill="var(--teal-dark)" font-family="sans-serif">N</text>
+    </svg>
+    <div>
+      <p class="kicker">GEOGRAPHY GAME &middot; NORTH AMERICA</p>
+      <h1>North America Explorer Quiz</h1>
+    </div>
+  </header>
+
+  <div class="card" id="screen-pick">
+    <p style="margin-top:0">Test your knowledge of North America with flags, national animals, landforms, and landscapes &mdash; each question comes with a picture and a spot on the map. Pick a category, or take the full Explorer Challenge.</p>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+
+  <div class="card hidden" id="screen-quiz">
+    <div class="progress-row">
+      <span id="progressLabel">Question 1 of 10</span>
+      <span id="scoreLabel">Score: 0</span>
+    </div>
+    <div class="bar"><div id="progressFill" style="width:0%"></div></div>
+
+    <div class="board-wrap">
+      <div class="board-caption">Your route across North America</div>
+      <div id="boardMap"></div>
+      <div class="board-legend">
+        <span><i class="dot current"></i>current stop</span>
+        <span><i class="dot correct"></i>got it</span>
+        <span><i class="dot wrong"></i>missed it</span>
+        <span><i class="dot unvisited"></i>still ahead</span>
+      </div>
+    </div>
+
+    <span class="qtag" id="qCategory">Flags</span>
+    <p class="question" id="qText"></p>
+
+    <div class="clue-row">
+      <div class="visual-box" id="qVisualBox">
+        <div id="qVisual"></div>
+        <div class="cap" id="qVisualCap"></div>
+      </div>
+    </div>
+
+    <div class="options" id="qOptions"></div>
+    <div class="explain" id="qExplain"></div>
+    <div class="nextbar"><button class="primary" id="nextBtn">Next →</button></div>
+  </div>
+
+  <div class="card hidden" id="screen-results">
+    <p class="kicker" style="text-align:center">RESULTS</p>
+    <div class="score-big" id="finalScore">0 / 0</div>
+    <div class="score-sub" id="finalMsg"></div>
+    <div class="breakdown" id="breakdown"></div>
+    <div class="actions">
+      <button class="primary" style="display:inline-block" id="retryBtn">Try Again</button>
+      <button class="ghost" id="homeBtn">Choose Another Category</button>
+    </div>
+  </div>
+
+  <footer>Built for classroom use &middot; no setup required &middot; works offline once opened &middot; map boundaries from public-domain Natural Earth data; Canada's high-Arctic islands are trimmed for layout</footer>
+</div>
+
+<script>
+/* ============================================================
+   SVG HELPERS
+   ============================================================ */
+function starPts(cx, cy, rOuter, rInner){
+  const pts = [];
+  for(let i=0;i<10;i++){
+    const r = i % 2 === 0 ? rOuter : rInner;
+    const angle = (Math.PI/5)*i - Math.PI/2;
+    pts.push((cx + r*Math.cos(angle)).toFixed(1) + "," + (cy + r*Math.sin(angle)).toFixed(1));
+  }
+  return pts.join(" ");
+}
+function svgWrap(vb, inner){ return `<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`; }
+
+function slugify(s){
+  return s.toLowerCase()
+    .replace(/'/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+/* Looks for images/<slug>.<ext> next to this HTML file (try several
+   extensions), and falls back to the built-in illustration if none
+   are found. This lets a teacher drop their own photos in a local
+   "images" folder without editing any code. */
+function setVisual(container, type, key, iconTables){
+  container.innerHTML = "";
+  if(type === 'flag'){
+    const slug = slugify(key);
+    const exts = ['jpg','jpeg','png','avif','gif','webp'];
+    const img = document.createElement('img');
+    img.className = 'real-photo flag-photo';
+    img.alt = key;
+    let i = 0;
+    function tryNext(){
+      if(i >= exts.length){
+        const span = document.createElement('span');
+        span.innerHTML = FLAG_SVGS[key] || "";
+        if(img.parentNode){ container.replaceChild(span, img); } else { container.appendChild(span); }
+        return;
+      }
+      img.src = `images/${slug}.${exts[i]}`;
+      i++;
+    }
+    img.onerror = tryNext;
+    container.appendChild(img);
+    tryNext();
+    return;
+  }
+  const table = iconTables[type];
+  const iconHTML = (table && table[key]) || "";
+  const slug = slugify(key);
+  const exts = ['jpg','jpeg','png','avif','gif','webp'];
+  const img = document.createElement('img');
+  img.className = 'real-photo';
+  img.alt = key;
+  let i = 0;
+  function tryNext(){
+    if(i >= exts.length){
+      const span = document.createElement('span');
+      span.innerHTML = iconHTML;
+      if(img.parentNode){ container.replaceChild(span, img); } else { container.appendChild(span); }
+      return;
+    }
+    img.src = `images/${slug}.${exts[i]}`;
+    i++;
+  }
+  img.onerror = tryNext;
+  container.appendChild(img);
+  tryNext();
+}
+
+/* ============================================================
+   FLAGS  (viewBox 0 0 60 40)
+   ============================================================ */
+const FLAG_SVGS = {};
+
+FLAG_SVGS["Canada"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#fff"/>
+  <rect width="15" height="40" fill="#d52b1e"/>
+  <rect x="45" width="15" height="40" fill="#d52b1e"/>
+  <polygon points="30,7 32,13 38,11 35,17 41,19 35,21 37,28 31,25 30,33 29,25 23,28 25,21 19,19 25,17 22,11 28,13" fill="#d52b1e"/>
+`);
+
+FLAG_SVGS["United States"] = (function(){
+  let stripes = "";
+  const stripeH = 40/13;
+  for(let i=0;i<13;i++){
+    stripes += `<rect y="${(i*stripeH).toFixed(2)}" width="60" height="${stripeH.toFixed(2)}" fill="${i%2===0?'#b22234':'#fff'}"/>`;
+  }
+  let dots = "";
+  for(let row=0; row<4; row++){
+    for(let col=0; col<5; col++){
+      dots += `<circle cx="${3 + col*4.5}" cy="${3 + row*4.2}" r="0.8" fill="#fff"/>`;
+    }
+  }
+  return svgWrap("0 0 60 40", `${stripes}<rect width="24" height="21.5" fill="#3c3b6e"/>${dots}`);
+})();
+
+FLAG_SVGS["Mexico"] = svgWrap("0 0 60 40", `
+  <rect width="20" height="40" fill="#006847"/>
+  <rect x="20" width="20" height="40" fill="#fff"/>
+  <rect x="40" width="20" height="40" fill="#ce1126"/>
+  <circle cx="30" cy="20" r="6" fill="#8a6d3b"/>
+  <polygon points="30,14 33,20 30,19 27,20" fill="#7a5230"/>
+  <polygon points="22,20 30,16 22,24" fill="#5a7d3c" opacity="0.7"/>
+`);
+
+FLAG_SVGS["Guatemala"] = svgWrap("0 0 60 40", `
+  <rect width="20" height="40" fill="#4997d0"/>
+  <rect x="20" width="20" height="40" fill="#fff"/>
+  <rect x="40" width="20" height="40" fill="#4997d0"/>
+  <circle cx="30" cy="20" r="6" fill="#fff" stroke="#4997d0" stroke-width="1"/>
+  <polygon points="30,16 32,20 30,24 28,20" fill="#3a7d3f"/>
+`);
+
+FLAG_SVGS["Belize"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#0033a0"/>
+  <rect y="0" width="60" height="4" fill="#ce1126"/>
+  <rect y="36" width="60" height="4" fill="#ce1126"/>
+  <circle cx="30" cy="20" r="10" fill="#fff"/>
+  <circle cx="30" cy="20" r="7" fill="#e8d9b8"/>
+  <polygon points="30,15 32,20 30,19 28,20" fill="#3a7d3f"/>
+`);
+
+FLAG_SVGS["Honduras"] = (function(){
+  const s1 = starPts(20,20,3,1.2);
+  const s2 = starPts(30,15,3,1.2);
+  const s3 = starPts(40,20,3,1.2);
+  const s4 = starPts(25,25,3,1.2);
+  const s5 = starPts(35,25,3,1.2);
+  return svgWrap("0 0 60 40", `
+    <rect width="60" height="13.3" fill="#0073cf"/>
+    <rect y="13.3" width="60" height="13.4" fill="#fff"/>
+    <rect y="26.7" width="60" height="13.3" fill="#0073cf"/>
+    <polygon points="${s1}" fill="#0073cf"/>
+    <polygon points="${s2}" fill="#0073cf"/>
+    <polygon points="${s3}" fill="#0073cf"/>
+    <polygon points="${s4}" fill="#0073cf"/>
+    <polygon points="${s5}" fill="#0073cf"/>
+  `);
+})();
+
+FLAG_SVGS["El Salvador"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="13.3" fill="#0047ab"/>
+  <rect y="13.3" width="60" height="13.4" fill="#fff"/>
+  <rect y="26.7" width="60" height="13.3" fill="#0047ab"/>
+  <circle cx="30" cy="20" r="7" fill="#fff" stroke="#8a6d3b" stroke-width="1"/>
+  <polygon points="25,23 30,15 35,23" fill="#5a7d3c"/>
+`);
+
+FLAG_SVGS["Nicaragua"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="13.3" fill="#0067c6"/>
+  <rect y="13.3" width="60" height="13.4" fill="#fff"/>
+  <rect y="26.7" width="60" height="13.3" fill="#0067c6"/>
+  <polygon points="30,14 37,25 23,25" fill="none" stroke="#0067c6" stroke-width="1.2"/>
+  <polygon points="26,24 27.5,18 29,24" fill="#8a6d3b"/>
+  <polygon points="30,24 31.5,17 33,24" fill="#8a6d3b"/>
+  <path d="M24,20 Q30,15 36,20" fill="none" stroke="#ce1126" stroke-width="1"/>
+`);
+
+FLAG_SVGS["Costa Rica"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#fff"/>
+  <rect y="4" width="60" height="6" fill="#0033a0"/>
+  <rect y="10" width="60" height="20" fill="#ce1126"/>
+  <rect y="30" width="60" height="6" fill="#0033a0"/>
+  <circle cx="20" cy="20" r="4" fill="#fff" opacity="0.85"/>
+`);
+
+FLAG_SVGS["Panama"] = (function(){
+  const star1 = starPts(15,10,4,1.6);
+  const star2 = starPts(45,30,4,1.6);
+  return svgWrap("0 0 60 40", `
+    <rect width="60" height="40" fill="#fff"/>
+    <rect x="30" width="30" height="20" fill="#da121a"/>
+    <rect y="20" width="30" height="20" fill="#0033a0"/>
+    <polygon points="${star1}" fill="#0033a0"/>
+    <polygon points="${star2}" fill="#da121a"/>
+  `);
+})();
+
+FLAG_SVGS["Cuba"] = (function(){
+  const star = starPts(11,20,6,2.4);
+  let stripes = "";
+  const stripeH = 40/5;
+  for(let i=0;i<5;i++){
+    stripes += `<rect y="${(i*stripeH).toFixed(2)}" width="60" height="${stripeH.toFixed(2)}" fill="${i%2===0?'#002a8f':'#fff'}"/>`;
+  }
+  return svgWrap("0 0 60 40", `
+    ${stripes}
+    <polygon points="0,0 22,20 0,40" fill="#ce1126"/>
+    <polygon points="${star}" fill="#fff"/>
+  `);
+})();
+
+FLAG_SVGS["Jamaica"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#009b3a"/>
+  <polygon points="0,0 60,40 60,0" fill="#000"/>
+  <polygon points="0,0 0,40 60,40" fill="#000"/>
+  <polygon points="0,0 30,20 0,40" fill="#009b3a"/>
+  <polygon points="60,0 30,20 60,40" fill="#009b3a"/>
+  <polygon points="0,0 60,0 30,20" fill="#fed100"/>
+  <polygon points="0,40 60,40 30,20" fill="#fed100"/>
+`);
+
+FLAG_SVGS["Haiti"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="20" fill="#00209f"/>
+  <rect y="20" width="60" height="20" fill="#d21034"/>
+  <rect x="24" y="13" width="12" height="14" fill="#fff"/>
+  <polygon points="30,15 31.5,19 30,18.4 28.5,19" fill="#3a7d3f"/>
+`);
+
+FLAG_SVGS["Dominican Republic"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#fff"/>
+  <rect width="27" height="17" fill="#002d62"/>
+  <rect x="33" width="27" height="17" fill="#ce1126"/>
+  <rect y="23" width="27" height="17" fill="#ce1126"/>
+  <rect x="33" y="23" width="27" height="17" fill="#002d62"/>
+  <circle cx="30" cy="20" r="4" fill="#fff" stroke="#002d62" stroke-width="1"/>
+`);
+
+FLAG_SVGS["The Bahamas"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="13.3" fill="#00778b"/>
+  <rect y="13.3" width="60" height="13.4" fill="#ffc72c"/>
+  <rect y="26.7" width="60" height="13.3" fill="#00778b"/>
+  <polygon points="0,0 0,40 24,20" fill="#000"/>
+`);
+
+FLAG_SVGS["Trinidad and Tobago"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#ce1126"/>
+  <polygon points="-2,6 8,-2 62,34 52,42" fill="#fff"/>
+  <polygon points="0,8 8,1 60,33 52,40" fill="#000"/>
+`);
+
+FLAG_SVGS["Saint Kitts and Nevis"] = (function(){
+  const s1 = starPts(19,31,3,1.2);
+  const s2 = starPts(31,19,3,1.2);
+  return svgWrap("0 0 60 40", `
+    <polygon points="0,0 60,0 0,40" fill="#009e49"/>
+    <polygon points="60,0 60,40 0,40" fill="#ce1126"/>
+    <polygon points="-3,43 63,-3 69,3 3,49" fill="#fcd116"/>
+    <polygon points="-1,41 61,-1 65,3 3,45" fill="#000"/>
+    <polygon points="${s1}" fill="#fff"/>
+    <polygon points="${s2}" fill="#fff"/>
+  `);
+})();
+
+FLAG_SVGS["Antigua and Barbuda"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#ce1126"/>
+  <polygon points="0,0 60,0 30,24" fill="#000"/>
+  <polygon points="9,0 51,0 30,18" fill="#0072c6"/>
+  <polygon points="15,18 45,18 30,40" fill="#fff"/>
+  <polygon points="30,4 32.5,10 26.5,9.3" fill="#f5a623"/>
+  <polygon points="30,4 33.5,9.3 27.5,10" fill="#f5a623"/>
+  <polygon points="30,4 24,8.5 30.5,9.5" fill="#f5a623"/>
+  <polygon points="30,4 36,8.5 29.5,9.5" fill="#f5a623"/>
+`);
+
+FLAG_SVGS["Barbados"] = svgWrap("0 0 60 40", `
+  <rect width="20" height="40" fill="#00267f"/>
+  <rect x="20" width="20" height="40" fill="#ffc726"/>
+  <rect x="40" width="20" height="40" fill="#00267f"/>
+  <line x1="30" y1="9" x2="30" y2="28" stroke="#000" stroke-width="2"/>
+  <line x1="30" y1="9" x2="25" y2="14" stroke="#000" stroke-width="1.6"/>
+  <line x1="30" y1="9" x2="35" y2="14" stroke="#000" stroke-width="1.6"/>
+  <polygon points="27,28 33,28 30,32" fill="#000"/>
+`);
+
+FLAG_SVGS["Dominica"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#1a8a4a"/>
+  <rect y="16" width="60" height="8" fill="#000"/>
+  <rect y="18.5" width="60" height="1.4" fill="#fcd116"/>
+  <rect y="22.5" width="60" height="1.4" fill="#fff"/>
+  <rect x="26" width="8" height="40" fill="#000"/>
+  <rect x="28.5" width="1.4" height="40" fill="#fcd116"/>
+  <rect x="32.2" width="1.4" height="40" fill="#fff"/>
+  <circle cx="30" cy="20" r="7" fill="#ce1126"/>
+  <circle cx="30" cy="20" r="4" fill="#6a3fa0"/>
+`);
+
+FLAG_SVGS["Saint Lucia"] = svgWrap("0 0 60 40", `
+  <rect width="60" height="40" fill="#66c6e8"/>
+  <polygon points="30,7 45,33 15,33" fill="#fcd116"/>
+  <polygon points="30,13 40,33 20,33" fill="#000"/>
+  <polygon points="30,15 34.5,33 25.5,33" fill="#fff"/>
+`);
+
+FLAG_SVGS["Saint Vincent and the Grenadines"] = svgWrap("0 0 60 40", `
+  <rect width="16" height="40" fill="#2a6bb5"/>
+  <rect x="16" width="28" height="40" fill="#fcd116"/>
+  <rect x="44" width="16" height="40" fill="#1a8a4a"/>
+  <polygon points="30,13 34,19 30,25 26,19" fill="#1a8a4a"/>
+  <polygon points="23,16 27,19 23,22 19,19" fill="#1a8a4a"/>
+  <polygon points="37,16 41,19 37,22 33,19" fill="#1a8a4a"/>
+`);
+
+FLAG_SVGS["Grenada"] = (function(){
+  const star = (cx,cy) => `<polygon points="${starPts(cx,cy,2.2,0.9)}" fill="#fcd116"/>`;
+  return svgWrap("0 0 60 40", `
+    <rect width="60" height="40" fill="#ce1126"/>
+    <polygon points="4,4 56,4 56,36 4,36" fill="#fcd116"/>
+    <polygon points="4,4 30,20 4,36" fill="#1a8a4a"/>
+    <polygon points="56,4 30,20 56,36" fill="#1a8a4a"/>
+    <circle cx="30" cy="20" r="6" fill="#ce1126"/>
+    ${star(30,20)}
+    ${star(14,4)} ${star(30,4)} ${star(46,4)}
+    ${star(14,36)} ${star(46,36)}
+    <polygon points="9,17 12,21 9,25 6,21" fill="#7a5230"/>
+  `);
+})();
+
+/* ============================================================
+   ANIMAL ICONS (viewBox 0 0 100 100)
+   ============================================================ */
+const ANIMAL_ICONS = {};
+
+function birdBase(bodyColor, headColor, tailColor, longTail){
+  const tail = longTail
+    ? `<path d="M50,72 Q30,95 18,110" stroke="${tailColor}" stroke-width="4" fill="none"/>
+       <path d="M55,74 Q45,98 38,114" stroke="${tailColor}" stroke-width="4" fill="none"/>`
+    : `<polygon points="42,76 50,94 58,76" fill="${tailColor}"/>`;
+  return `
+    <ellipse cx="50" cy="62" rx="24" ry="19" fill="${bodyColor}"/>
+    <circle cx="50" cy="38" r="13" fill="${headColor}"/>
+    <polygon points="50,38 65,43 50,47" fill="#e8a33d"/>
+    <circle cx="46" cy="35" r="1.6" fill="#222"/>
+    <polygon points="26,60 10,48 34,55" fill="${bodyColor}"/>
+    ${tail}
+  `;
+}
+
+ANIMAL_ICONS["Beaver"] = svgWrap("0 0 100 100", `
+  <ellipse cx="45" cy="55" rx="26" ry="20" fill="#7a5230"/>
+  <ellipse cx="78" cy="60" rx="16" ry="10" fill="#4a3220"/>
+  <circle cx="25" cy="42" r="14" fill="#8a6238"/>
+  <circle cx="18" cy="32" r="4" fill="#8a6238"/>
+  <circle cx="30" cy="30" r="4" fill="#8a6238"/>
+  <circle cx="19" cy="44" r="1.6" fill="#222"/>
+  <polygon points="18,50 24,50 21,56" fill="#fff"/>
+`);
+
+ANIMAL_ICONS["Bald Eagle"] = svgWrap("0 0 100 100", birdBase("#5a4634", "#fff", "#5a4634", false));
+ANIMAL_ICONS["Golden Eagle"] = svgWrap("0 0 100 100", birdBase("#7a5a2e", "#7a5a2e", "#4a381c", false));
+ANIMAL_ICONS["Harpy Eagle"] = svgWrap("0 0 100 100", `
+  ${birdBase("#3a3a3a", "#d9d9d9", "#3a3a3a", false)}
+  <polygon points="40,28 44,20 48,28" fill="#3a3a3a"/>
+  <polygon points="52,28 56,20 60,28" fill="#3a3a3a"/>
+`);
+
+ANIMAL_ICONS["Resplendent Quetzal"] = svgWrap("0 0 100 100", `
+  <ellipse cx="48" cy="58" rx="16" ry="20" fill="#c0392b"/>
+  <ellipse cx="48" cy="45" rx="17" ry="16" fill="#1a8a4a"/>
+  <circle cx="48" cy="30" r="10" fill="#1a8a4a"/>
+  <polygon points="48,30 58,33 48,36" fill="#e8a33d"/>
+  <path d="M55,60 Q75,80 65,115" stroke="#1a8a4a" stroke-width="3" fill="none"/>
+  <path d="M50,62 Q68,86 58,118" stroke="#1a8a4a" stroke-width="3" fill="none"/>
+`);
+
+ANIMAL_ICONS["Baird's Tapir"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="55" rx="30" ry="18" fill="#3a3a3a"/>
+  <path d="M20,50 Q6,50 4,58 Q6,62 18,60" fill="#3a3a3a"/>
+  <circle cx="30" cy="42" r="3" fill="#fff" opacity="0.85"/>
+  <rect x="20" y="66" width="6" height="14" fill="#2a2a2a"/>
+  <rect x="70" y="66" width="6" height="14" fill="#2a2a2a"/>
+  <rect x="40" y="66" width="6" height="14" fill="#2a2a2a"/>
+  <rect x="58" y="66" width="6" height="14" fill="#2a2a2a"/>
+`);
+
+ANIMAL_ICONS["Scarlet Macaw"] = svgWrap("0 0 100 100", `
+  ${birdBase("#d0202a", "#d0202a", "#2456c8", false)}
+  <path d="M52,74 Q70,96 60,120" stroke="#2456c8" stroke-width="5" fill="none"/>
+  <path d="M46,75 Q58,98 50,122" stroke="#e8a33d" stroke-width="5" fill="none"/>
+  <ellipse cx="34" cy="58" rx="8" ry="12" fill="#e8c93d"/>
+`);
+
+ANIMAL_ICONS["Turquoise-browed Motmot"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="55" rx="18" ry="17" fill="#2a8f7f"/>
+  <circle cx="50" cy="36" r="11" fill="#1a4d45"/>
+  <path d="M42,30 Q50,24 58,30" stroke="#3fd1c9" stroke-width="2.5" fill="none"/>
+  <polygon points="50,36 62,39 50,42" fill="#333"/>
+  <line x1="50" y1="72" x2="46" y2="112" stroke="#2a8f7f" stroke-width="2.5"/>
+  <circle cx="46" cy="115" r="4" fill="#1a4d45"/>
+`);
+
+ANIMAL_ICONS["Clay-colored Thrush"] = svgWrap("0 0 100 100", birdBase("#a08260", "#8a6d4c", "#a08260", false));
+
+ANIMAL_ICONS["Cuban Trogon"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="60" rx="18" ry="18" fill="#c0392b"/>
+  <ellipse cx="50" cy="44" rx="18" ry="14" fill="#2a6fb8"/>
+  <rect x="34" y="52" width="32" height="6" fill="#fff"/>
+  <circle cx="50" cy="30" r="9" fill="#2a6fb8"/>
+  <polygon points="50,30 58,33 50,36" fill="#333"/>
+  <rect x="46" y="74" width="8" height="22" fill="#2a6fb8"/>
+`);
+
+ANIMAL_ICONS["Doctor Bird"] = svgWrap("0 0 100 100", `
+  <ellipse cx="52" cy="55" rx="13" ry="12" fill="#1a8a55"/>
+  <circle cx="52" cy="40" r="8" fill="#0a5a3a"/>
+  <line x1="52" y1="40" x2="68" y2="38" stroke="#333" stroke-width="2"/>
+  <path d="M56,64 Q75,80 92,72" stroke="#0a5a3a" stroke-width="3" fill="none"/>
+  <path d="M52,66 Q70,86 88,84" stroke="#0a5a3a" stroke-width="3" fill="none"/>
+`);
+
+ANIMAL_ICONS["Caribbean Flamingo"] = svgWrap("0 0 100 100", `
+  <ellipse cx="55" cy="72" rx="20" ry="14" fill="#f472a0"/>
+  <path d="M50,60 Q30,40 40,20" stroke="#f472a0" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <circle cx="40" cy="18" r="7" fill="#f472a0"/>
+  <polygon points="40,18 52,14 43,24" fill="#333"/>
+  <line x1="48" y1="84" x2="44" y2="118" stroke="#e05590" stroke-width="3"/>
+  <line x1="62" y1="84" x2="66" y2="118" stroke="#e05590" stroke-width="3"/>
+`);
+
+ANIMAL_ICONS["Hispaniolan Trogon"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="60" rx="18" ry="18" fill="#c0392b"/>
+  <ellipse cx="50" cy="44" rx="18" ry="14" fill="#1f8a48"/>
+  <rect x="34" y="52" width="32" height="5" fill="#dcdcdc"/>
+  <circle cx="50" cy="30" r="9" fill="#1f8a48"/>
+  <polygon points="50,30 58,33 50,36" fill="#333"/>
+  <rect x="46" y="74" width="8" height="24" fill="#2456c8"/>
+  <rect x="46" y="90" width="8" height="6" fill="#fff"/>
+`);
+
+ANIMAL_ICONS["Palmchat"] = svgWrap("0 0 100 100", birdBase("#a08c5a", "#8a7548", "#a08c5a", false));
+
+ANIMAL_ICONS["Scarlet Ibis"] = svgWrap("0 0 100 100", `
+  <ellipse cx="52" cy="66" rx="17" ry="13" fill="#e0301e"/>
+  <path d="M48,56 Q30,42 34,26" stroke="#e0301e" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <circle cx="34" cy="24" r="6" fill="#e0301e"/>
+  <path d="M34,24 Q24,26 20,34" stroke="#333" stroke-width="2.5" fill="none"/>
+  <polygon points="30,60 16,52 34,58" fill="#c0281a"/>
+  <line x1="48" y1="78" x2="44" y2="100" stroke="#a02515" stroke-width="3"/>
+  <line x1="58" y1="78" x2="62" y2="100" stroke="#a02515" stroke-width="3"/>
+`);
+
+ANIMAL_ICONS["Cocrico"] = svgWrap("0 0 100 100", birdBase("#8a6b45", "#6b4f30", "#8a6b45", false));
+
+ANIMAL_ICONS["Brown Pelican"] = svgWrap("0 0 100 100", `
+  <ellipse cx="45" cy="65" rx="22" ry="16" fill="#5a6068"/>
+  <circle cx="70" cy="45" r="12" fill="#7a828c"/>
+  <path d="M70,45 Q92,50 90,62 Q75,60 68,52 Z" fill="#e8a33d"/>
+  <path d="M25,60 L8,50 L28,54 Z" fill="#5a6068"/>
+  <line x1="40" y1="80" x2="36" y2="98" stroke="#333" stroke-width="3"/>
+  <line x1="52" y1="80" x2="56" y2="98" stroke="#333" stroke-width="3"/>
+`);
+
+ANIMAL_ICONS["Grenada Dove"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="60" rx="22" ry="18" fill="#c9a875"/>
+  <circle cx="50" cy="38" r="12" fill="#b5926a"/>
+  <polygon points="50,38 60,41 50,44" fill="#8a6d4c"/>
+  <circle cx="46" cy="35" r="1.5" fill="#222"/>
+  <polygon points="30,58 12,50 32,54" fill="#b5926a"/>
+`);
+
+ANIMAL_ICONS["Saint Lucia Parrot"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="62" rx="18" ry="20" fill="#1f8a48"/>
+  <circle cx="50" cy="36" r="12" fill="#5a3fa0"/>
+  <polygon points="50,36 60,40 50,44" fill="#333"/>
+  <ellipse cx="50" cy="55" rx="8" ry="10" fill="#2456c8"/>
+  <path d="M50,80 Q56,95 50,100" stroke="#c0392b" stroke-width="5" fill="none"/>
+`);
+
+ANIMAL_ICONS["Sisserou Parrot"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="62" rx="19" ry="21" fill="#6a3fa0"/>
+  <circle cx="50" cy="35" r="12" fill="#6a3fa0"/>
+  <polygon points="50,35 60,39 50,43" fill="#333"/>
+  <ellipse cx="50" cy="58" rx="9" ry="12" fill="#1f8a48"/>
+  <path d="M50,82 Q58,97 50,102" stroke="#1f8a48" stroke-width="5" fill="none"/>
+`);
+
+ANIMAL_ICONS["Saint Vincent Parrot"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="62" rx="18" ry="20" fill="#1f8a48"/>
+  <circle cx="50" cy="35" r="12" fill="#e8c93d"/>
+  <polygon points="50,35 60,39 50,43" fill="#333"/>
+  <ellipse cx="50" cy="58" rx="8" ry="10" fill="#2456c8"/>
+  <path d="M50,80 Q58,96 50,101" stroke="#e8a33d" stroke-width="5" fill="none"/>
+`);
+
+ANIMAL_ICONS["Magnificent Frigatebird"] = svgWrap("0 0 100 100", `
+  <ellipse cx="50" cy="55" rx="10" ry="16" fill="#1a1a1a"/>
+  <path d="M42,50 Q10,40 2,55 Q22,55 42,58 Z" fill="#1a1a1a"/>
+  <path d="M58,50 Q90,40 98,55 Q78,55 58,58 Z" fill="#1a1a1a"/>
+  <circle cx="50" cy="35" r="7" fill="#1a1a1a"/>
+  <polygon points="50,35 62,33 50,40" fill="#333"/>
+  <ellipse cx="50" cy="46" rx="6" ry="8" fill="#c0392b"/>
+  <polygon points="46,70 50,95 54,70" fill="#1a1a1a"/>
+`);
+
+/* ============================================================
+   LANDFORM ICONS (viewBox 0 0 100 100)
+   ============================================================ */
+const LANDFORM_ICONS = {};
+
+LANDFORM_ICONS["Rocky Mountains"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#bfe0ee"/>
+  <polygon points="0,80 20,35 35,60 50,25 68,60 85,40 100,80" fill="#6b7a8c"/>
+  <polygon points="20,35 26,45 14,45" fill="#fff"/>
+  <polygon points="50,25 56,37 44,37" fill="#fff"/>
+  <polygon points="85,40 90,49 80,49" fill="#fff"/>
+  <rect y="80" width="100" height="20" fill="#7fae72"/>
+`);
+
+LANDFORM_ICONS["Grand Canyon"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#bfe0ee"/>
+  <polygon points="0,30 100,30 100,45 60,55 40,55 0,45" fill="#c98a4b"/>
+  <polygon points="10,45 90,45 90,60 55,70 45,70 10,60" fill="#b5713a"/>
+  <polygon points="20,60 80,60 80,75 55,85 45,85 20,75" fill="#93552c"/>
+  <polygon points="35,75 65,75 55,95 45,95" fill="#6e3d20"/>
+`);
+
+LANDFORM_ICONS["Great Lakes"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#7fae72"/>
+  <ellipse cx="30" cy="35" rx="16" ry="9" fill="#4a95c9"/>
+  <ellipse cx="55" cy="30" rx="10" ry="7" fill="#4a95c9"/>
+  <ellipse cx="70" cy="45" rx="14" ry="8" fill="#4a95c9"/>
+  <ellipse cx="45" cy="55" rx="18" ry="8" fill="#4a95c9"/>
+  <ellipse cx="65" cy="65" rx="10" ry="6" fill="#4a95c9"/>
+`);
+
+LANDFORM_ICONS["Yucatán Peninsula"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#bfe0ee"/>
+  <path d="M10,20 L70,20 Q95,40 70,60 L20,70 L10,50 Z" fill="#7fae72"/>
+  <polygon points="45,35 55,35 55,45 60,45 50,58 40,45 45,45" fill="#93552c"/>
+`);
+
+LANDFORM_ICONS["Isthmus of Panama"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="45" fill="#bfe0ee"/>
+  <rect y="55" width="100" height="45" fill="#4a95c9"/>
+  <path d="M0,45 Q50,30 100,45 L100,55 Q50,45 0,55 Z" fill="#7fae72"/>
+`);
+
+LANDFORM_ICONS["Mississippi River"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#7fae72"/>
+  <path d="M55,0 C40,20 65,30 50,50 C38,68 60,80 45,100" stroke="#4a95c9" stroke-width="8" fill="none"/>
+`);
+
+LANDFORM_ICONS["Baja California Peninsula"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#4a95c9"/>
+  <path d="M40,5 L55,5 L60,50 L48,95 L38,95 L34,50 Z" fill="#c9a86a"/>
+`);
+
+LANDFORM_ICONS["Appalachian Mountains"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#bfe0ee"/>
+  <path d="M0,75 Q15,55 30,68 Q45,50 55,65 Q70,48 85,66 Q95,58 100,68 L100,100 L0,100 Z" fill="#5c8a63"/>
+  <rect y="80" width="100" height="20" fill="#7fae72"/>
+`);
+
+LANDFORM_ICONS["Great Plains"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#e8d99a"/>
+  <path d="M0,60 Q25,55 50,60 T100,60" stroke="#c9b96a" stroke-width="3" fill="none"/>
+  <path d="M0,72 Q25,67 50,72 T100,72" stroke="#c9b96a" stroke-width="3" fill="none"/>
+  <path d="M0,84 Q25,79 50,84 T100,84" stroke="#c9b96a" stroke-width="3" fill="none"/>
+`);
+
+LANDFORM_ICONS["Central American Volcanic Arc"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#bfe0ee"/>
+  <polygon points="8,80 22,45 36,80" fill="#7a5a4a"/>
+  <polygon points="38,80 52,35 66,80" fill="#7a5a4a"/>
+  <polygon points="64,80 78,50 92,80" fill="#7a5a4a"/>
+  <circle cx="22" cy="45" r="3" fill="#e0672f"/>
+  <circle cx="52" cy="35" r="3" fill="#e0672f"/>
+  <circle cx="78" cy="50" r="3" fill="#e0672f"/>
+  <rect y="80" width="100" height="20" fill="#7fae72"/>
+`);
+
+/* ============================================================
+   LANDSCAPE ICONS (viewBox 0 0 100 100)
+   ============================================================ */
+const LANDSCAPE_ICONS = {};
+
+LANDSCAPE_ICONS["Tundra"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#dfeaf0"/>
+  <rect y="65" width="100" height="35" fill="#eef2ec"/>
+  <circle cx="20" cy="68" r="2" fill="#5c8a63"/>
+  <circle cx="35" cy="70" r="2" fill="#5c8a63"/>
+  <circle cx="60" cy="68" r="2" fill="#5c8a63"/>
+  <circle cx="80" cy="70" r="2" fill="#5c8a63"/>
+  <circle cx="75" cy="20" r="10" fill="#f2d089"/>
+`);
+
+LANDSCAPE_ICONS["Boreal Forest (Taiga)"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#bfe0ee"/>
+  <rect y="80" width="100" height="20" fill="#3f6b45"/>
+  <polygon points="15,80 25,50 35,80" fill="#2c5236"/>
+  <polygon points="35,80 45,45 55,80" fill="#2c5236"/>
+  <polygon points="55,80 65,52 75,80" fill="#2c5236"/>
+  <polygon points="75,80 85,48 95,80" fill="#2c5236"/>
+`);
+
+LANDSCAPE_ICONS["Desert (e.g., Sonoran, Chihuahuan)"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#f2e0b0"/>
+  <circle cx="78" cy="22" r="12" fill="#e8a33d"/>
+  <rect x="35" y="40" width="8" height="40" rx="4" fill="#4a7d4a"/>
+  <rect x="20" y="55" width="8" height="20" rx="4" fill="#4a7d4a"/>
+  <rect x="50" y="50" width="8" height="25" rx="4" fill="#4a7d4a"/>
+  <rect x="20" y="55" width="20" height="7" rx="3" fill="#4a7d4a"/>
+  <rect x="42" y="58" width="16" height="7" rx="3" fill="#4a7d4a"/>
+`);
+
+LANDSCAPE_ICONS["Everglades"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#8fc7c2"/>
+  <line x1="20" y1="90" x2="20" y2="55" stroke="#3f6b45" stroke-width="3"/>
+  <line x1="35" y1="90" x2="35" y2="45" stroke="#3f6b45" stroke-width="3"/>
+  <line x1="50" y1="90" x2="50" y2="58" stroke="#3f6b45" stroke-width="3"/>
+  <line x1="68" y1="90" x2="68" y2="50" stroke="#3f6b45" stroke-width="3"/>
+  <line x1="82" y1="90" x2="82" y2="60" stroke="#3f6b45" stroke-width="3"/>
+  <ellipse cx="30" cy="82" rx="8" ry="3" fill="#3f8f4e"/>
+  <ellipse cx="60" cy="86" rx="8" ry="3" fill="#3f8f4e"/>
+`);
+
+LANDSCAPE_ICONS["Tropical Rainforest"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#bfe0ee"/>
+  <circle cx="20" cy="55" r="20" fill="#2c6b3a"/>
+  <circle cx="45" cy="40" r="24" fill="#1f8a48"/>
+  <circle cx="72" cy="52" r="22" fill="#2c6b3a"/>
+  <circle cx="90" cy="35" r="14" fill="#1f8a48"/>
+  <rect y="75" width="100" height="25" fill="#245c30"/>
+`);
+
+LANDSCAPE_ICONS["Prairie / Grassland"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#cfe4f5"/>
+  <rect y="55" width="100" height="45" fill="#d8c869"/>
+  <line x1="10" y1="70" x2="12" y2="55" stroke="#a89637" stroke-width="2"/>
+  <line x1="20" y1="72" x2="22" y2="58" stroke="#a89637" stroke-width="2"/>
+  <line x1="35" y1="70" x2="37" y2="54" stroke="#a89637" stroke-width="2"/>
+  <line x1="50" y1="73" x2="52" y2="58" stroke="#a89637" stroke-width="2"/>
+  <line x1="65" y1="70" x2="67" y2="55" stroke="#a89637" stroke-width="2"/>
+  <line x1="80" y1="72" x2="82" y2="57" stroke="#a89637" stroke-width="2"/>
+  <line x1="92" y1="70" x2="94" y2="55" stroke="#a89637" stroke-width="2"/>
+`);
+
+LANDSCAPE_ICONS["Turquoise, warm tropical water"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#5fc3d1"/>
+  <path d="M0,30 Q25,20 50,30 T100,30" stroke="#eafaf7" stroke-width="4" fill="none" opacity="0.7"/>
+  <path d="M0,45 Q25,35 50,45 T100,45" stroke="#eafaf7" stroke-width="4" fill="none" opacity="0.7"/>
+  <ellipse cx="30" cy="80" rx="8" ry="6" fill="#e0672f"/>
+  <ellipse cx="50" cy="85" rx="10" ry="7" fill="#f2a33d"/>
+  <ellipse cx="70" cy="80" rx="7" ry="5" fill="#c0392b"/>
+`);
+
+LANDSCAPE_ICONS["Alpine zone"] = svgWrap("0 0 100 100", `
+  <rect width="100" height="100" fill="#cfe4f5"/>
+  <polygon points="10,90 50,15 90,90" fill="#7d8b96"/>
+  <polygon points="50,15 62,42 38,42" fill="#fff"/>
+  <line x1="30" y1="65" x2="70" y2="65" stroke="#5f6b74" stroke-width="1.5"/>
+  <line x1="26" y1="78" x2="74" y2="78" stroke="#5f6b74" stroke-width="1.5"/>
+`);
+
+/* ============================================================
+   MAP — real North America country boundaries, generated from
+   public-domain Natural Earth data (via the world-atlas npm
+   package) with a Mercator projection. Canada's high-Arctic
+   islands are trimmed since Mercator wildly inflates their size
+   and none of the quiz content concerns them; this gives the US,
+   Mexico, Central America, and the Caribbean far more usable
+   space. The tiny Eastern Caribbean nations get their own zoomed
+   inset map below the main one, since they're too small to see
+   as country shapes at continent scale.
+   ============================================================ */
+const MAP_W = 340, MAP_H = 400;
+const COUNTRY_PATHS = {"United States": "M116.992,167.777L116.517,167.777L116.741,166.511L117.448,167.541ZM116.908,169.073L116.247,168.637L117.252,168.199ZM112.944,159.602L112.944,159.602L112.944,159.602ZM85.012,148.934L85.012,148.934L85.012,148.934ZM86.445,151.624L86.445,151.624L86.445,151.624ZM77.513,150.352L77.513,150.352L77.513,150.352ZM67.175,148.807L67.175,148.807L67.175,148.807ZM45.7,173.256L45.7,173.256L45.7,173.256ZM48.203,174.905L48.203,174.905L48.203,174.905ZM47.803,174.098L47.803,174.098L47.803,174.098ZM30.506,180.448L30.506,180.448L30.506,180.448ZM30.757,114.939L30.757,114.939L30.757,114.939ZM16.921,130.733L18.447,131.006L19.592,130.399L20.662,131.6L22.188,132.422L24.021,132.642L23.676,133.439L22.346,133.449L21.546,134.667L21.276,133.886L18.512,131.871L17.089,132.482L16,131.68L16.195,130.369ZM30.692,148.689L31.743,149.052L32.097,151.132L30.766,151.847L28.105,150.639L27.333,149.613L28.887,149.558L29.817,148.698ZM64.905,161.585L66.124,161.576L66.673,162.777L66.161,163.362L64.868,163.111L65.472,163.895L63.937,164.459L63.128,165.171L62.69,166.208L61.872,166.388L62.597,165.583L61.425,164.857L61.388,165.953L60.774,165.361L60.234,163.936L60.671,162.861L61.983,162.517L62.56,163.828L62.309,161.602L63.286,162.031L64.086,161.719L64.226,160.859ZM124.026,170.737L123.738,171.512L123.998,173.437L123.533,174.662L122.603,175.817L121.895,175.646L121.384,174.074L121.877,173.177L121.719,171.432L121.142,170.233L121.421,169.815L119.476,170.785L118.964,172.354L118.341,171.504L119.327,169.477L117.662,166.642L116.555,165.311L115.131,164.716L114.898,162.207L116.033,162.827L114.414,161.433L113.214,159.585L112.033,158.842L110.823,156.567L110.227,153.664L109.865,154.763L111.037,159.227L110.386,159.474L109.688,158.705L108.906,158.79L108.943,157.889L108.19,155.541L107.994,156.949L107.12,156.072L106.022,155.602L106.31,156.368L108.004,157.76L108.441,158.842L107.073,159.525L104.589,157.863L103.342,156.072L102.505,155.34L98.764,153.019L99.499,152.238L99.322,151.302L100.365,151.507L99.49,150.594L97.685,152.096L96.066,151.98L94.605,151.186L94.81,150.262L93.926,150.845L90.632,150.181L87.524,150.603L87.05,149.694L85.58,148.943L85.868,147.633L84.333,148.662L82.993,148.198L83.579,147.285L81.439,147.029L81.085,145.98L81.225,144.758L79.141,145.869L77.55,145.602L78.21,144.265L76.126,146.487L76.871,147.029L76.433,147.925L77.438,147.724L77.057,149.82L76.452,150.738L75.391,150.935L73.958,150.136L73.437,151.864L71.883,152.913L70.897,152.922L69.985,154.526L69.343,154.263L67.901,154.833L67.612,153.726L69.138,152.815L69.697,151.864L68.766,152.425L67.603,151.811L68.645,149.631L69.008,148.262L68.887,146.909L71.26,145.315L72.107,145.796L73.446,145.472L72.255,144.526L72.535,143.864L70.813,143.826L68.282,145.546L67.873,146.735L66.533,147.934L66.552,148.553L65.538,149.45L64.561,149.188L65.603,150.253L65.268,151.096L64.095,151.499L61.834,153.946L61.602,154.999L63.565,155.977L63.779,156.489L62.011,158.302L61.425,159.942L59.452,160.647L55.656,163.97L55.265,165.492L52.725,167.296L50.65,168.191L50.334,168.661L51.004,169.307L50.194,169.364L49.683,170.281L47.784,171.097L46.435,171.312L45.263,172.346L43.709,172.948L42.723,172.979L42.779,171.925L41.187,174.153L40.518,174.553L39.978,173.689L39.782,174.608L39.15,174.991L38.489,174.49L37.922,175.342L38.08,174.231L39.038,173.901L40.973,171.512L43.411,170.12L43.951,170.737L45.849,170.993L45.161,170.192L45.775,168.758L47.105,167.606L48.408,167.01L49.348,166.093L49.999,166.347L50.008,165.352L50.892,164.119L52.399,162.919L52.948,158.662L54.205,156.914L54.8,155.104L53.935,156.394L51.664,157.579L50.939,157.57L50.418,156.524L50.632,155.332L49.72,156.264L49.683,158.559L48.92,158.422L47.403,156.22L46.761,156.68L45.616,155.524L43.411,156.775L43.03,157.432L41.011,157.553L42.099,156.81L41.318,154.351L41.829,152.798L40.759,149.757L40.294,149.215L41.029,147.102L39.615,149.287L39.903,150.738L38.229,151.481L36.451,151.686L34.497,149.106L32.711,147.861L34.135,146.008L35.53,146.9L36.219,146.68L36.907,147.605L37.708,146.726L36.228,146.155L33.176,145.62L33.949,144.972L32.618,144.302L32.162,144.888L31.846,143.826L30.804,142.711L30.608,141.928L31.539,141.682L31.064,140.933L32.041,140.733L31.799,139.463L33.13,137.388L34.2,137.35L34.032,135.553L34.86,133.697L35.94,132.921L37.866,134.163L38.638,133.965L39.773,132.901L40.648,131.378L41.448,131.821L43.281,131.57L44.537,129.689L43.997,127.137L42.9,125.497L44.146,125.173L44.258,123.872L43.486,123.09L42.76,123.872L42.006,123.745L39.299,126.412L39.122,125.559L38.424,126.111L36.954,125.121L35.428,125.152L33.893,125.893L30.673,125.152L29.799,124.282L29.975,123.069L28.645,121.665L29.668,121.676L30.534,120.744L27.417,120.023L25.649,118.55L28.263,117.172L29.11,116.06L30.487,115.306L31.762,115.672L31.455,114.828L32.469,113.766L33.465,113.587L35.019,112.607L36.917,112.427L36.126,115.017L37,115.86L39.094,115.761L41.857,116.048L42.788,114.594L43.877,115.184L43.653,114.248L41.829,114.013L40.89,111.928L39.81,110.608L40.452,110.253L41.336,111.326L41.615,112.799L42.444,113.441L43.839,113.351L44.872,114.002L45.951,113.699L45.877,112.709L44.314,112.076L42.937,112.844L41.755,111.883L42.36,110.046L41.476,109.575L38.796,109.725L36.935,108.606L35.893,105.838L32.627,102.842L30.431,101.226L29.008,100.655L30.059,100.192L30.506,96.925L32.311,97.05L35.428,96.551L36.554,95.838L38.377,93.272L38.917,90.533L41.69,86.194L41.271,87.376L43.979,86.394L46.249,84.182L46.305,86.181L46.9,86.594L47.208,84.654L46.342,83.844L48.324,81.938L49.143,82.54L51.72,82.198L53.804,80.23L55.675,77.704L55.675,78.644L57.973,80.009L56.512,81.54L57.219,82.28L59.043,80.189L60.318,81.073L60.029,81.815L61.555,82.54L64.04,81.513L66.626,82.471L66.012,83.695L66.784,84.452L67.826,84.425L67.371,85.259L69.231,85.527L70.683,84.815L71.353,85.326L72.73,84.815L74.284,84.883L76.926,85.994L78.331,87.072L83.188,87.509L84.807,88.655L89.925,87.839L91.246,88.458L92.307,89.701L93.851,90.442L94.605,91.322L95.656,91.335L95.656,149.124L96.885,149.549L97.071,149.133L98.308,149.739L99.081,148.979L100.625,148.898L100.346,150.253L101.593,151.195L101.779,151.829L104.468,154.64L104.868,156.264L106.478,155.026L107.082,155.017L107.752,152.718L109.939,151.748L111.037,152.851L111.307,154.324L112.609,155.349L112.982,156.29L114.21,157.251L118.322,164.592L118.043,165.163L118.834,165.41L118.648,166.216L119.262,166.519L119.374,167.475L120.016,167.427L122.174,168.637L123.021,169.654L123.84,169.71ZM37.568,174.874L37.875,175.973L37.289,176.462L36.023,176.485L34.684,177.451L34.088,177.382L33.921,176.539L34.842,175.319L36.554,174.608ZM115.55,172.314L114.656,173.563L114.694,172.338ZM120.63,174.42L120.453,175.256L120.044,173.587ZM118.629,169.71L118.574,170.481L117.215,169.855L117.941,167.899L118.75,169.09ZM121.56,172.568L121.021,173.854L120.351,172.932L119.532,174.035L119.318,172.9L119.83,172.124L119.886,170.993L120.807,170.425L121.588,171.743ZM115.391,165.517L116.452,166.101L115.782,168.061L114.777,168.061L114.573,166.495L113.8,165.492ZM116.694,175.256L117.327,175.264L117.094,176.198L116.015,174.92L115.568,173.311ZM81.718,148.344L82.472,148.544L81.141,149.269L80.918,148.562ZM78.248,151.65L78.043,151.195L79.681,148.825L80.183,149.369ZM78.452,148.344L78.452,148.344L78.452,148.344ZM77.745,146.358L77.745,146.358L77.745,146.358ZM64.626,164.939L63.881,165.534L63.909,164.658ZM65.975,158.345L65.975,158.345L65.975,158.345ZM64.021,161.458L64.021,161.458L64.021,161.458ZM58.01,171.041L58.01,171.041L58.01,171.041ZM60.29,168.191L60.29,168.191L60.29,168.191ZM61.518,167.825L61.518,167.825L61.518,167.825ZM44.779,173.358L45.291,173.949L44.5,174.129ZM40.611,175.475L40.611,175.475L40.611,175.475ZM39.95,177.459L39.95,177.459L39.95,177.459ZM46.882,174.2L45.961,175.131L46.11,174.231L46.761,173.571ZM31.455,178.925L31.455,178.925L31.455,178.925ZM32.181,178.634L32.181,178.634L32.181,178.634ZM44.174,157.889L43.625,157.432L44.705,156.801ZM20.289,164.658L20.289,164.658L20.289,164.658ZM21.499,184.231L21.499,184.231L21.499,184.231ZM18.81,185.371L18.81,185.371L18.81,185.371ZM21.341,167.263L21.341,167.263L21.341,167.263ZM111.242,163.862L112.116,166.659L112.06,169.162L111.214,167.801L111.493,167.092L110.311,166.38L110.646,165.41L109.865,164.376L109.064,165.492L109.129,164.028L110.274,162.986ZM111.995,159.934L113.13,160.019L113.996,161.753L113.94,162.325L113.103,160.486L113.056,161.29L113.912,162.752L113.94,163.928L112.414,165.336L112.153,164.609L112.488,163.237L112.042,162.484L111.735,160.342ZM109.278,159.534L109.585,160.766L110.274,160.121L111.158,160.477L111.344,163.237L109.883,162.367L109.381,163.529L108.813,163.404L108.385,162.308L107.11,160.859L107.752,159.653ZM114.87,168.645L115.81,168.734L116.089,169.799L116.964,170.241L118.471,172.608L117.597,172.084L118.983,173.839L118.974,175.662L118.574,176.074L116.899,174.561L116.071,173.153L116.247,172.108L115.568,172.029L114.573,171.209L115.708,170.585L115.373,170.056L114.563,170.481ZM113.782,166.274L114.126,167.508L113.884,169.63L113.261,169.863L113.242,168.297L112.786,166.298ZM66.152,158.962L67.296,159.209L66.943,159.934L65.752,159.9L65.212,160.647L63.658,160.299L65.054,158.679ZM25.965,182.094L24.57,183.397L23.118,184.29L24.225,182.477L24.932,182.274L25.128,181.416L26.384,181.484ZM29.454,179.673L30.45,179.528L29.622,180.546L30.245,180.562L29.054,181.522L27.11,182.386L26.365,182.184L28.105,181.303L28.515,179.398ZM57.973,295.644L57.201,295.482L57.173,294.627L56.763,293.622L57.359,292.892L57.322,292.175L58.959,292.95L59.983,294.242L58.671,294.965ZM53.749,289.58L55.051,289.743L54.67,290.018L53.553,289.864ZM55.628,290.359L56.838,290.748L56.614,291.155L55.758,291.232ZM52.241,288.91L52.66,289.32L51.432,289.291L51.013,288.548L51.813,288.23ZM48.175,287.587L47.096,287.277L47.636,286.774L48.222,286.783ZM46.082,287.839L46.082,287.839L46.082,287.839ZM54.698,290.805L54.698,290.805L54.698,290.805ZM266.991,215.178L275.244,215.159L275.737,214.129L276.844,214.231L277.347,213.163L278.398,211.852L278.519,210.565L279.143,208.845L281.125,205.985L282.195,206.978L283.721,206.429L284.828,207.433L284.893,212.612L285.795,212.971L285.693,214.18L286.596,214.568L286.419,216.374L284.753,216.734L284.186,217.425L283.172,216.979L282.958,217.883L281.85,217.25L281.571,218.465L279.654,219.63L279.254,219.332L277.821,221.141L277.021,222.99L277.579,223.705L276.463,224.727L277.254,225.085L277.831,226.564L278.398,226.823L279.161,226.486L279.301,227.003L277.468,227.495L277.347,226.871L276.147,227.651L275.57,226.594L275.225,228.034L273.309,228.333L271.606,228.357L269.903,229.257L268.238,230.673L268.2,231.187L268.936,231.623L268.368,233.65L266.768,236.076L264.888,234.448L265.223,235.776L266.144,237.728L264.702,240.589L263.66,241.787L263.948,240.628L264.534,239.538L264.041,239.476L263.939,238.214L263.111,238.197L262.971,237.406L263.651,237.401L262.934,236.837L263.223,236.572L263.046,235.446L263.985,234.379L262.571,235.33L262.357,237.63L262.478,238.814L260.952,238.214L261.315,238.735L262.236,239.077L262.971,239.732L262.767,240.447L262.971,241.482L262.078,241.595L262.813,242.159L262.627,242.996L263.66,242.923L263.678,244.339L263.958,245.297L261.78,245.99L263.474,245.952L264.246,246.179L264.237,246.981L263.204,247.912L262.283,247.422L261.138,247.582L262.329,248.176L261.641,249.065L262.72,249.235L261.762,249.956L260.729,249.95L259.129,251.279L258.673,252.357L257.435,252.428L256.309,253.027L255.314,254.7L253.257,256.436L252.094,257.043L250.931,258.501L250.438,258.702L249.991,260.566L249.591,260.76L249.387,261.739L250.084,264.978L250.996,267.188L251.964,268.847L251.154,268.049L251.387,269.158L252.736,272.587L252.997,272.95L253.211,274.438L252.904,276.429L252.373,277.996L251.415,278.492L250.447,278.546L250.485,278.031L249.787,276.563L248.884,276.124L248.493,274.824L248.047,274.483L247.972,273.504L247.395,273.564L246.502,271.662L247.116,270.755L246.651,270.395L246.437,271.1L245.972,270.725L246.437,268.847L246.465,267.665L244.809,265.995L243.767,264.585L242.864,264.051L241.989,264.642L239.57,265.314L239.477,264.735L238.444,263.865L236.639,263.168L234.704,263.35L235.262,263.075L234.788,262.752L234.499,263.35L233.187,263.491L232.61,262.283L232.294,263.267L230.303,263.122L229.224,263.33L228.535,263.87L226.888,263.231L226.404,263.942L227.018,264.279L228.154,263.849L227.949,264.342L228.535,264.616L229.019,264.228L229.14,264.901L228.191,265.5L228.73,266.088L230.015,266.731L229.652,267.286L229.14,267.127L227.791,265.974L227.335,266.057L226.925,267.024L226.488,266.458L225.53,266.947L224.497,266.392L222.58,264.854L221.631,265.686L220.57,265.562L219.268,265.025L217.277,264.916L216.876,265.345L215.118,265.712L215.22,265.108L214.494,265.252L214.839,266.237L213.843,267.44L212.345,268.397L210.307,268.192L210.875,268.933L209.293,269.998L208.94,270.628L208.26,270.75L208.633,271.237L208.028,272.279L207.944,273.282L208.251,274.679L209.005,276.189L208.456,276.449L207.311,275.954L206.083,275.755L203.934,274.789L203.068,273.081L202.901,271.596L202.259,271.064L200.863,269.316L199.924,267.132L197.569,264.932L195.764,264.746L194.564,265.423L194.155,266.695L193.206,267.332L191,266.191L189.986,265.324L189.53,263.963L188.758,262.429L187.372,261.42L184.943,259.034L180.403,259.003L180.393,260.367L173.089,260.382L163.282,256.777L163.571,256.143L157.355,256.703L156.48,254.356L154.899,253.032L154.043,252.968L153.791,252.114L152.145,251.821L150.954,250.86L148.693,250.692L148.265,250.354L148.302,248.791L147.716,247.879L145.082,244.796L145.306,243.506L145.073,242.839L144.338,242.67L143.742,241.973L143.435,240.129L144.58,241.092L143.77,239.515L144.208,239.254L145.501,239.271L144.682,238.98L143.519,239.026L143.417,239.953L142.356,239.202L141.872,237.905L140.365,236.388L139.89,233.201L138.755,231.882L138.634,231.069L139.248,229.435L139.416,228.016L138.681,225.454L138.551,223.845L138.197,223.039L139.211,219.916L139.444,216.002L139.779,213.067L139.825,210.824L140.83,210.669L139.407,210.461L139.481,209.237L139.881,209.035L139.304,208.268L140.002,207.887L139.304,207.611L138.625,205.234L137.992,204.292L137.76,202.45L139.658,203.272L142.114,203.608L142.756,203.386L143.073,204.379L143.268,206.634L142.626,206.469L142.114,207.222L143.147,207.202L143.854,206.336L143.752,204.613L144.143,203.877L143.035,202.118L143.482,201.956L143.361,200.958L142.728,200.051L160.427,197.587L178.43,196.75L196.433,197.587L214.132,200.051L214.15,198.561L214.922,198.816L215.053,200.009L215.527,201.033L216.988,201.359L217.891,201.881L219.724,201.542L221.008,202.233L221.231,202.848L221.854,202.612L223.548,203.695L225.297,203.144L225.548,203.514L227.232,203.467L227.493,203.863L229.354,203.843L231.661,202.747L236.704,205.693L240.715,208.124L241.524,209.791L242.483,209.446L243.041,211.187L243.971,211.064L244.353,211.523L244.036,212.181L246.726,213.918L247.796,220.35L247.098,222.12L246.735,223.699L245.376,224.836L245.2,225.968L246.363,227.009L247.014,227.009L250.019,225.151L252.68,224.605L255.807,223.076L256.123,222.696L255.463,220.721L256.626,220.158L261.538,220.145L262.46,218.609L265.781,215.559ZM272.676,229.381L274.248,229.126L270.908,230.514L269.084,230.798L268.74,230.567L269.931,229.607ZM283.851,217.614L283.851,217.614L283.851,217.614ZM268.34,230.963L268.34,230.963L268.34,230.963ZM277.849,228.04L277.849,228.04L277.849,228.04ZM275.951,227.645L275.951,227.645L275.951,227.645ZM279.217,228.422L279.217,228.422L279.217,228.422ZM264.6,246.317L264.6,246.317L264.6,246.317ZM264.832,248.275L264.832,248.275L264.832,248.275ZM264.218,248.434L264.218,248.434L264.218,248.434ZM262.357,250.158L262.357,250.158L262.357,250.158ZM248.056,274.769L248.056,274.769L248.056,274.769ZM247.935,274.483L247.935,274.483L247.935,274.483ZM252.327,278.536L252.327,278.536L252.327,278.536ZM222.841,265.851L222.841,265.851L222.841,265.851ZM209.34,270.562L209.34,270.562L209.34,270.562ZM209.991,269.825L209.991,269.825L209.991,269.825ZM208.465,272.319L208.465,272.319L208.465,272.319ZM214.448,266.901L214.448,266.901L214.448,266.901ZM208.94,275.62L208.94,275.62L208.94,275.62ZM149.139,252.092L149.139,252.092L149.139,252.092ZM151.391,254.598L151.391,254.598L151.391,254.598ZM154.201,255.796L154.201,255.796L154.201,255.796ZM149.818,252.422L149.818,252.422L149.818,252.422ZM150.237,251.919L150.237,251.919L150.237,251.919ZM154.201,254.077L154.201,254.077L154.201,254.077ZM142.747,201.305L142.747,201.305L142.747,201.305ZM142.151,201.976L142.151,201.976L142.151,201.976ZM143.287,203.312L143.287,203.312L143.287,203.312ZM275.635,227.663L275.635,227.663L275.635,227.663ZM268.48,233.808L268.48,233.808L268.48,233.808ZM265.381,239.749L265.381,239.749L265.381,239.749ZM262.246,250.12L262.246,250.12L262.246,250.12ZM249.87,279.936L249.87,279.936L249.87,279.936ZM251.173,279.502L251.173,279.502L251.173,279.502ZM251.666,279.215L251.666,279.215L251.666,279.215ZM250.615,279.749L250.615,279.749L250.615,279.749ZM249.647,261.452L249.647,261.452L249.647,261.452ZM249.266,280.079L249.266,280.079L249.266,280.079ZM252.839,272.38L252.839,272.38L252.839,272.38ZM248.707,280.237L248.707,280.237L248.707,280.237ZM230.34,265.221L230.34,265.221L230.34,265.221ZM231.196,263.719L231.196,263.719L231.196,263.719ZM232.452,263.61L232.452,263.61L232.452,263.61ZM229.475,264.114L229.475,264.114L229.475,264.114ZM230.498,264.937L230.498,264.937L230.498,264.937ZM240.631,265.428L240.631,265.428L240.631,265.428ZM142.561,206.971L142.561,206.971L142.561,206.971ZM143.742,206.244L143.742,206.244L143.742,206.244ZM143.482,205.48L143.482,205.48L143.482,205.48ZM142.645,202.247L142.645,202.247L142.645,202.247ZM282.725,218.109L282.725,218.109L282.725,218.109Z", "Trinidad and Tobago": "M303.055,316.631L303.055,316.631L303.055,316.631ZM302.395,319.379L300.087,319.548L301.139,319.024L301.139,318.052L300.739,317.842L302.637,317.522L302.339,317.97Z", "Saint Lucia": "M302.693,309.631L302.265,309.381L302.665,308.909Z", "Saint Kitts and Nevis": "M298.468,300.784L298.468,300.784L298.468,300.784ZM298.208,300.464L298.208,300.464L298.208,300.464Z", "Panama": "M260.105,323.245L259.836,323.662L260.524,324.878L260.161,325.734L259.677,326.096L259.249,325.77L258.747,326.974L258.049,326.155L257.398,324.805L258.189,323.971L255.677,322.36L254.765,322.337L254.123,322.741L253.964,323.408L252.364,324.211L252.131,324.764L253.285,326.268L252.187,326.856L251.136,326.996L250.326,325.344L250.168,325.951L249.433,325.693L248.856,324.606L247.74,324.456L247.544,324.152L246.391,324.125L245.879,324.778L245.507,324.139L245.925,323.78L245.776,323.032L246.27,322.568L245.721,322.191L245.721,321.173L246.688,320.841L247.191,321.228L247.516,322.269L248.717,322.464L249.815,322.923L251.154,322.646L251.908,322.137L252.987,321.801L254.411,320.786L257.184,321.287L258.272,321.732ZM256.17,324.247L256.17,324.247L256.17,324.247ZM249.173,326.702L248.531,326.39L248.847,325.951ZM247.544,321.355L247.544,321.355L247.544,321.355ZM255.732,324.302L255.732,324.302L255.732,324.302Z", "Nicaragua": "M245.153,306.508L244.781,307.019L245.079,308.252L244.502,309.168L244.102,310.965L244.241,313.376L244.074,312.701L243.618,313.137L243.804,314.4L243.422,314.831L243.878,315.409L243.32,316.31L243.906,317.321L243.469,317.778L242.548,317.677L242.083,317.156L241.171,316.964L240.631,317.243L238.882,316.603L238.472,316.937L237.914,316.228L236.602,315.157L235.858,314.051L233.504,312.07L234.35,311.872L235.076,311.84L235.969,310.983L235.914,309.788L236.956,309.769L237.709,309.025L238.361,309.571L239.431,308.562L240.436,307.149L240.752,306.996L241.589,307.469L243.32,307.038L244.176,306.55Z", "Mexico": "M157.355,256.703L163.571,256.143L163.282,256.777L173.089,260.382L180.393,260.367L180.403,259.003L184.943,259.034L187.372,261.42L188.758,262.429L189.53,263.963L189.986,265.324L191,266.191L193.206,267.332L194.155,266.695L194.564,265.423L195.764,264.746L197.569,264.932L199.924,267.132L200.863,269.316L202.259,271.064L202.901,271.596L203.068,273.081L203.934,274.789L206.083,275.755L207.311,275.954L208.456,276.449L209.005,276.189L208.8,277.265L208.065,278.898L207.656,280.676L207.404,283.737L207.451,284.762L207.162,285.652L207.73,288.5L209.07,291.237L210.782,293.293L211.219,294.736L212.001,295.53L212.429,296.346L214.076,296.493L215.071,296.999L215.723,297.926L216.644,297.869L218.291,297.231L220.012,297.127L220.468,296.734L222.366,296.45L222.813,297.122L223.511,297.16L224.181,296.701L223.762,295.976L225.558,294.713L225.679,293.675L226.162,293.174L226.218,291.4L226.563,290.147L227.94,289.411L230.368,289.026L232.303,288.466L234.574,288.934L234.89,288.452L235.681,289.007L235.579,290.493L234.657,291.534L234.015,292.654L234.109,293.212L233.448,293.932L234.127,294.08L233.532,294.969L233.932,294.889L233.02,297.671L232.499,296.975L232.555,296.113L231.875,297.117L231.289,297.188L230.554,298.497L229.707,298.483L229.642,298.902L224.916,298.897L224.906,300.427L223.827,300.417L225.632,301.9L226.395,302.756L226.321,303.612L222.98,303.616L221.817,305.63L222.106,306.29L221.696,307.705L220.207,306.118L217.351,303.663L215.425,303.261L214.811,302.682L213.35,303.873L211.415,304.633L210.642,304.74L208.902,304.05L207.432,303.896L206.437,303.252L205.45,302.986L204.827,302.368L202.426,301.867L201.561,301.328L199.44,300.568L197.486,299.345L196.853,298.61L194.648,298.232L192.731,297.515L191.512,296.142L188.86,294.827L187.455,292.997L186.972,291.874L188.032,291.338L187.427,290.791L188.088,289.844L188.163,288.814L187.586,288.457L187.027,287.427L187.037,286.483L186.655,285.643L185.083,284.05L183.315,281.734L181.072,280.035L180.412,279.012L180.858,278.839L179.007,277.728L178.29,277.569L178.663,276.842L177.853,277.245L177.369,276.862L177.267,275.984L177.853,275.2L177.118,274.026L176.411,274.051L175.927,272.96L174.55,272.253L174.187,271.287L174.41,270.674L172.884,270.369L171.973,269.148L171.442,268.893L170.195,267.275L170.037,266.536L168.707,264.409L168.483,263.465L167.739,261.985L167.906,260.823L166.418,260.319L165.58,259.462L165.059,259.83L163.031,258.633L163.403,259.404L163.161,260.891L163.477,261.488L164.017,264.295L165.887,266.031L166.734,267.552L167.497,267.926L167.786,268.775L168.362,269.03L168.716,270.786L169.758,271.667L170.121,272.647L170.605,272.96L170.968,274.122L171.144,273.539L171.721,274.036L172.335,275.715L172.438,276.683L173.108,277.434L174.029,279.541L174.075,280.814L174.829,281.498L175.099,280.804L175.722,281.286L177.276,283.248L177.183,283.996L175.983,284.918L175.555,284.582L174.848,282.896L174.15,282.524L173.098,281.483L172.112,280.848L170.428,279.398L170.279,278.819L170.465,277.544L170.158,276.329L169.637,275.46L167.972,274.393L167.627,273.342L167.32,273.795L166.483,273.996L165.85,273.287L164.287,272.556L164.045,271.935L162.761,270.735L163.971,270.907L164.668,270.649L165.087,271.237L164.966,270.237L165.32,269.025L165.069,268.499L162.873,266.196L161.114,265.092L160.77,264.482L160.751,263.454L160.286,263.127L160.109,261.954L159.504,261.452L159.411,260.75L158.565,259.657L158.667,258.786L158.081,258.342ZM235.383,292.099L235.411,291.414L235.858,291.414ZM184.822,288.481L184.822,288.481L184.822,288.481ZM173.415,296.384L173.415,296.384L173.415,296.384ZM174.317,278.928L174.317,278.928L174.317,278.928ZM167.627,267.178L166.529,266.108L166.511,265.634L167.506,266.438ZM162.417,270.069L161.942,269.968L162.352,269.311ZM170.084,267.316L169.888,268.013L169.284,267.783L169.395,266.839L169.879,266.623ZM154.48,267.506L154.48,267.506L154.48,267.506ZM235.969,289.512L235.969,289.512L235.969,289.512ZM223.12,296.559L223.12,296.559L223.12,296.559ZM176.281,281.35L176.281,281.35L176.281,281.35ZM163.645,259.23L163.645,259.23L163.645,259.23ZM172.94,276.019L172.94,276.019L172.94,276.019ZM171.386,280.666L171.386,280.666L171.386,280.666ZM170.465,280.232L169.842,279.541L170.102,279.264Z", "Jamaica": "M260.394,297.155L261.306,297.34L262.748,297.987L263.111,298.638L262.301,298.765L261.455,298.473L260.543,299.175L260.133,298.855L259.082,298.732L258.3,297.883L257.724,297.808L257.928,297.184L258.812,296.98Z", "Honduras": "M245.153,306.508L244.176,306.55L243.32,307.038L241.589,307.469L240.752,306.996L240.436,307.149L239.431,308.562L238.361,309.571L237.709,309.025L236.956,309.769L235.914,309.788L235.969,310.983L235.076,311.84L234.35,311.872L233.96,310.882L233.122,310.757L233.373,309.658L232.248,309.191L231.485,309.557L229.912,308.28L229.121,308.048L229.614,307.538L229.484,306.847L230.117,306.109L232.052,304.535L233.625,304.05L235.467,304.447L236.891,304.391L238.37,303.798L239.142,304.078L240.464,303.836L241.534,304.339L242.306,304.284L243.599,305.899L243.897,305.504L244.613,305.848ZM236.723,302.789L236.723,302.789L236.723,302.789ZM238.147,302.565L238.147,302.565L238.147,302.565Z", "Haiti": "M274.565,293.708L274.881,295.316L274.49,295.71L274.658,296.407L273.997,296.772L274.611,297.472L274.593,298.294L273.839,297.779L271.727,297.987L270.415,297.718L269.475,297.883L269.122,298.289L267.586,297.179L268.238,296.597L269.885,296.98L271.95,297.217L273.095,296.564L271.894,295.478L272.174,294.47L271.271,294.004L270.387,293.87L270.592,293.331L271.727,293.131L273.43,293.637ZM271.913,296.284L270.675,295.957L270.973,295.767ZM272.276,292.83L272.276,292.83L272.276,292.83Z", "Guatemala": "M221.696,307.705L222.106,306.29L221.817,305.63L222.98,303.616L226.321,303.612L226.395,302.756L225.632,301.9L223.827,300.417L224.906,300.427L224.916,298.897L229.642,298.902L229.447,304.092L230.331,304.102L231.085,304.442L231.103,303.938L232.052,304.535L230.117,306.109L229.484,306.847L229.614,307.538L229.121,308.048L227.205,309.598L227.223,309.862L225.902,309.349L224.506,309.358L222.766,308.548Z", "Grenada": "M300.571,314.432L300.571,314.432L300.571,314.432Z", "El Salvador": "M229.121,308.048L229.912,308.28L231.485,309.557L232.248,309.191L233.373,309.658L233.122,310.757L232.824,311.338L232.173,311.379L230.396,311.066L229.335,310.549L227.977,310.328L227.223,309.862L227.205,309.598Z", "Dominican Republic": "M274.593,298.294L274.611,297.472L273.997,296.772L274.658,296.407L274.49,295.71L274.881,295.316L274.565,293.708L275.142,293.222L276.696,293.169L278.826,293.932L279.273,293.837L279.84,294.855L280.911,294.779L280.138,295.354L282.567,295.938L283.46,296.734L282.474,297.808L281.915,297.292L279.757,297.193L278.687,297.718L277.924,297.812L277.496,297.486L276.509,297.656L275.56,299.364L274.946,299.015Z", "Dominica": "M301.697,305.82L301.185,305.08L301.595,304.922Z", "Cuba": "M248.568,284.143L250.271,284.43L251.638,284.308L252.373,284.757L253.127,284.762L254.151,285.322L255.193,286.26L256.709,286.371L259.426,287.959L259.789,287.756L261.985,289.387L264.702,290.191L264.581,290.911L266.349,291.079L267.503,291.874L268.396,292.128L268.173,292.716L267.186,292.773L265.939,293.203L264.814,293.231L263.25,292.964L259.222,293.331L259.64,292.706L260.524,292.109L260.478,291.16L258.496,290.964L257.221,290.027L256.84,288.746L256.356,288.457L255.193,288.616L252.718,287.752L252.029,287.219L250.829,287.248L248.624,286.837L247.944,286.313L248.773,286.095L248.4,285.497L246.242,285.473L244.585,286.774L243.153,286.977L242.901,287.553L241.682,288.022L241.682,287.592L240.715,287.694L242.138,287.19L242.045,286.337L242.864,285.536L244.902,284.689L246.428,284.474L247.889,284.064ZM259.343,287.529L259.343,287.529L259.343,287.529ZM258.421,286.599L258.421,286.599L258.421,286.599ZM256.858,285.852L256.858,285.852L256.858,285.852ZM258.803,287.04L258.803,287.04L258.803,287.04ZM246.698,288.587L245.944,288.944L245.348,287.979L245.59,287.558L246.298,287.703ZM254.997,285.541L254.997,285.541L254.997,285.541Z", "Costa Rica": "M246.688,320.841L245.721,321.173L245.721,322.191L246.27,322.568L245.776,323.032L245.925,323.78L245.507,324.139L245.879,324.778L245.246,324.043L245.144,323.427L244.353,323.118L244.809,323.903L243.664,323.358L243.916,322.26L243.246,321.628L241.273,320.659L241.133,319.994L239.719,319.056L239.98,319.685L240.687,320.199L240.101,320.827L239.58,320.227L238.779,319.985L238.249,318.686L238.668,317.773L238.044,317.371L238.472,316.937L238.882,316.603L240.631,317.243L241.171,316.964L242.083,317.156L242.548,317.677L243.469,317.778L243.906,317.321L244.409,318.508L246.139,320.595Z", "Canada": "M117.224,178.672L118.034,178.764L118.369,180.046L117.457,180.599L118.434,180.615L118.574,179.085L119.783,178.611L118.89,182.439L117.578,182.746L116.992,182.244L117.801,182.071L116.731,181.386L116.201,180.205L116.21,178.535ZM119.56,182.739L119.867,183.911L119.169,184.149L120.332,184.854L119.979,185.379L120.928,187.179L118.248,183.978L118.546,183.583L117.504,182.986ZM131.33,193.451L132.614,193.959L135.768,194.762L137.936,198.327L139.611,199.139L140.058,199.695L140.895,201.658L141.444,202.152L140.644,202.632L137.815,201.603L136.699,200.958L137.397,199.907L135.824,200.256L134.866,199.66L135.35,199.29L133.796,198.271L133.005,198.361L133.526,197.4L132.093,196.267L131.544,196.525L131.2,195.484L129.609,195.526L129.497,194.241L130.586,194.403L130.642,193.684L129.106,194.023L128.362,193.026L129.469,192.55ZM124.026,170.737L123.84,169.71L123.021,169.654L122.174,168.637L120.016,167.427L119.374,167.475L119.262,166.519L118.648,166.216L118.834,165.41L118.043,165.163L118.322,164.592L114.21,157.251L112.982,156.29L112.609,155.349L111.307,154.324L111.037,152.851L109.939,151.748L107.752,152.718L107.082,155.017L106.478,155.026L104.868,156.264L104.468,154.64L101.779,151.829L101.593,151.195L100.346,150.253L100.625,148.898L99.081,148.979L98.308,149.739L97.071,149.133L96.885,149.549L95.656,149.124L95.656,91.335L98.299,91.554L100.355,92.339L103.082,94.996L106.729,96.901L108.264,96.95L110.227,98.277L110.116,97.324L108.897,96.701L109.641,96.039L108.813,95.298L109.381,93.844L110.414,93.87L110.804,92.684L112.572,92.62L112.693,91.103L114.061,92.39L113.298,94.263L115.913,92.94L116.75,91.335L117.755,91.361L120.36,89.336L121.151,89.414L121.691,88.326L122.798,87.628L124.231,88.023L124.789,87.257L124.994,88.733L121.607,91.477L119.271,92.082L118.062,93.87L117.141,94.212L115.354,96.913L117.094,97.435L117.057,95.524L119.132,93.997L119.467,92.953L121.467,92.978L121.579,94.579L123.179,91.297L126.389,89.61L126.743,90.883L128.26,89.022L128.539,87.905L130.074,86.74L128.818,85.527L129.283,84.317L131.488,86.899L132.847,90.741L134.261,92.697L136.01,93.565L136.569,92.978L136.085,91.516L136.494,90.001L138.448,87.878L138.541,90.468L139.276,91.038L138.355,93.004L138.718,93.45L140.607,93.348L141.63,92.146L142.114,90.144L144.58,90.105L147.446,91.258L149.176,93.042L152.861,94.237L154.861,95.788L156.881,96.564L160.119,97.274L159.625,96.402L161.226,96.301L163.84,97.919L165.534,100.375L165.19,101.299L163.468,101.275L162.528,102.241L161.738,103.823L162.51,104.395L166.269,105.213L169.488,105.319L173.219,104.585L175.518,103.202L176.737,104.988L178.151,105.142L178.839,106.988L179.416,105.956L181.184,108.826L180.375,109.575L179.667,109.299L182.812,113.665L181.696,111.622L181.919,109.886L183.129,110.688L181.026,104.988L181.473,102.902L182.626,102.734L185.018,101.759L185.073,100.935L186.683,99.483L186.292,98.697L184.934,99.544L184.543,100.667L183.157,101.044L181.938,100.85L181.64,101.952L180.272,102.121L179.091,101.093L180.142,98.881L182.403,98.327L185.697,96.676L186.934,97.336L187.595,99.96L188.2,100.862L189.595,101.553L190.033,102.722L190.786,102.938L192.647,102.362L194.666,104.442L197.607,105.26L200.445,104.252L202.212,104.431L204.129,105.083L205.72,104.347L204.976,103.393L205.162,102.65L206.976,105.142L208.205,105.779L208.977,105.035L208.847,104.145L207.47,103.31L206.511,103.823L205.115,100.631L206.232,100.947L207.33,100.461L206.986,99.495L208.688,99.997L209.442,101.384L210.847,100.996L210.093,102.734L212.038,101.42L211.015,106.497L211.526,107.991L212.689,107.793L213.471,109.817L211.033,109.977L212.261,111.611L212.038,110.218L213.638,110.035L213.88,108.165L212.866,104.953L213.359,103.01L214.904,102.866L218.058,98.721L217.956,96.913L217.444,96.126L216.969,97.646L215.899,97.944L215.676,96.739L216.923,95.122L216.476,93.819L218.114,93.068L217.788,94.465L218.607,93.374L218.04,92.313L216.43,92.787L215.499,91.348L215.006,91.876L211.833,89.988L210.689,87.773L210.559,86.221L211.377,84.573L212.28,84.519L212.206,83.356L211.48,83.817L210.549,82.485L210.912,78.784L211.982,77.676L213.089,78.28L213.499,77.027L212.382,76.148L214.029,73.626L215.695,73.004L216.337,74.778L217.621,74.763L217.751,75.821L219.054,77.267L219.854,78.882L219.77,82.144L221.296,83.722L222.348,86.541L222.766,86.114L223.427,87.363L222.32,87.628L221.473,86.926L220.98,87.931L222.366,88.431L220.012,91.206L221.026,91.09L222.534,92.223L223.892,91.348L224.143,92.133L226.041,92.415L225.344,93.997L224.274,94.022L225.548,95.336L226.265,97.075L225.986,99.838L226.944,101.372L227.781,99.52L228.33,95.989L229.149,94.453L229.912,94.174L232.536,97.448L233.132,100.339L233.02,101.299L231.745,101.153L232.136,104.763L234.537,108.687L236.425,106.461L236.853,104.359L237.933,102.65L238.51,100.058L238.5,98.746L239.059,97.745L240.733,97.721L240.119,97.224L240.752,95.562L239.394,94.415L239.096,91.335L239.319,89.857L240.343,90.183L242.352,89.962L243.841,90.974L246.549,91.038L247.181,91.4L246.195,92.492L247.349,93.119L247.758,94.301L249.666,94.668L249.88,95.235L248.261,96.938L249.75,97.174L250.01,98.549L248.372,99.96L246.716,100.046L247.572,102.145L248.112,101.952L248.205,104.098L250.038,106.836L249.591,109.287L248.475,109.989L247.637,111.463L246.493,112.619L244.213,114.035L243.19,112.019L242.445,111.645L241.589,110.092L240.761,110.299L242.511,112.223L243.432,114.538L242.222,114.527L241.748,115.251L239.896,114.024L238.835,112.743L236.174,112.98L236.295,114.337L237.812,115.195L237.7,116.247L234.471,120.443L232.722,120.476L230.908,118.843L228.116,116.798L227.865,117.205L224.86,116.611L223.78,116.721L224.785,117.468L224.934,116.908L228.023,118.059L230.126,120.476L232.127,120.905L234.211,121.023L235.151,121.409L234.499,123.682L232.369,127.539L230.526,128.679L228.461,128.443L227.958,127.56L227.27,127.869L227.847,128.883L227.037,128.75L227.437,129.78L226.842,130.723L225.372,131.076L223.492,130.237L221.426,129.872L218.607,128.454L217.919,127.755L218.272,129.424L218.737,128.934L221.799,130.338L221.557,131.187L222.71,130.399L225.539,132.412L225.688,133.787L225.223,134.727L223.725,135.534L222.217,135.199L221.371,135.445L222.413,136.434L220.877,136.98L220.319,137.912L220.943,139.089L219.324,137.989L219.966,138.829L219.677,139.511L218.216,140.343L218.914,141.294L217.881,142.193L216.914,143.808L216.737,145.305L215.462,148.516L215.099,150.926L215.099,154.43L214.885,155.34L215.285,156.264L216.393,157.199L216.272,159.269L216.988,156.975L218.998,157L221.166,164.227L220.431,165.855L221.343,165.657L224.599,164.385L225.939,164.468L228.014,165.624L230.191,166.241L232.443,168.045L233.774,169.96L238.249,171.798L239.831,173.2L239.449,174.427L240.24,173.492L241.152,173.61L243.208,173.358L246.66,174.114L247.582,175.623L247.07,177.659L247.786,180.03L247.74,182.439L247.479,183.747L249.256,186.277L249.312,186.828L250.81,187.945L251.62,188.839L252.085,190.714L253.053,190.815L254.058,191.495L254.123,190.549L255.025,189.382L255.797,190.06L256.151,191.152L256.598,189.923L255.956,188.94L257.212,186.762L256.616,185.172L256.626,184.194L256.17,183.389L255.611,180.471L255.909,179.223L255.276,178.795L254.178,176.144L256.132,175.319L258.766,173.713L260.645,171.766L261.976,169.726L262.246,168.556L262.301,166.052L261.966,163.72L260.664,160.63L258.449,158.765L257.156,157.363L257.37,156.272L259.11,153.858L259.194,152.354L260.217,151.731L260.264,150.468L259.315,148.462L259.743,147.751L259.026,147.349L259.51,146.367L258.021,146.395L259.184,144.33L259.166,143.087L259.743,142.447L258.626,141.322L258.133,139.425L258.31,138.047L260.105,136.834L261.38,137.107L264.125,138.27L265.363,138.289L267.186,139.386L267.158,138.858L269.438,137.418L272.36,139.731L271.997,140.895L272.685,140.448L273.411,140.943L273.932,142.145L274.928,142.117L274.369,143.077L275.486,144.591L277.291,145.139L278.445,145.074L278.919,146.072L280.529,145.379L280.631,146.422L279.785,148.398L280.008,150.298L277.561,150.765L279.664,150.971L280.25,152.354L279.989,154.052L280.715,154.078L280.371,156.437L279.803,156.081L278.761,156.975L279.71,157.329L281.05,156.359L282.53,156.255L283.265,156.862L283.73,158.765L284.967,158.739L285.163,160.766L285.442,159.679L287.926,158.027L288.726,156.81L289.703,157.915L289.387,156.68L290.522,155.218L291.034,153.054L291.034,151.74L291.639,151.159L292.262,149.378L292.848,148.943L293.583,149.793L292.681,150.621L293.937,150.352L294.086,152.016L294.523,151.597L295.314,153.187L294.746,153.717L295.863,154.104L295.947,155.201L297.128,156.385L297.584,157.415L296.244,158.508L296.914,158.713L298.273,158.285L297.305,160.274L298.58,159.976L299.054,160.859L300.097,161.399L299.92,162.61L298.664,163.329L300.227,163.72L299.901,164.352L300.804,164.666L301.567,165.484L301.464,167.043L299.678,166.961L298.552,166.479L300.515,167.769L299.817,168.11L301.325,168.548L300.58,169.146L301.483,169.219L301.26,170.241L302.432,170.857L302.86,170.417L304.125,171.209L303.958,171.83L304.516,172.6L303.418,174.514L304.46,173.713L305.633,173.382L306.461,173.988L305.651,175.287L306.926,173.878L307.605,174.106L308.164,175.506L309.15,175.802L310.276,175.342L310.359,175.802L311.718,176.709L310.955,177.528L309.792,177.69L308.545,179.017L307.801,179.085L306.312,179.962L305.465,179.962L304.637,181.001L304.153,182.432L305.447,181.401L306.759,180.796L308.489,179.33L309.95,178.841L309.68,178.228L311.69,178.519L312.36,180.296L311.495,180.842L311.904,181.552L313.179,180.38L314.146,180.266L315.068,181.038L315.868,182.664L315.626,183.576L315.858,185.105L314.509,185.526L315.756,185.681L316.138,187.245L315.3,188.12L312.825,190.089L310.778,190.218L309.038,190.714L306.014,194.051L304.805,195.015L301.678,195.225L300.552,195.624L300.05,195.099L297.994,194.825L296.635,195.064L295.361,194.811L292.43,194.931L291.397,194.748L289.173,195.232L288.224,195.19L287.07,196.065L285.954,198.644L284.186,199.008L281.934,200.692L280.78,202.423L280.008,203.151L277.868,202.551L279.747,203.541L279.403,204.566L278.007,206.137L277.338,207.216L275.886,208.517L274.304,208.93L272.239,210.429L271.457,210.721L270.182,212.477L269.568,212.573L268.731,213.349L268.889,213.925L266.991,215.178L265.781,215.559L262.46,218.609L261.538,220.145L256.626,220.158L255.463,220.721L256.123,222.696L255.807,223.076L252.68,224.605L250.019,225.151L247.014,227.009L246.363,227.009L245.2,225.968L245.376,224.836L246.735,223.699L247.098,222.12L247.796,220.35L246.726,213.918L244.036,212.181L244.353,211.523L243.971,211.064L243.041,211.187L242.483,209.446L241.524,209.791L240.715,208.124L236.704,205.693L231.661,202.747L229.354,203.843L227.493,203.863L227.232,203.467L225.548,203.514L225.297,203.144L223.548,203.695L221.854,202.612L221.231,202.848L221.008,202.233L219.724,201.542L217.891,201.881L216.988,201.359L215.527,201.033L215.053,200.009L214.922,198.816L214.15,198.561L214.132,200.051L196.433,197.587L178.43,196.75L160.427,197.587L142.728,200.051L142.021,200.105L141.314,198.202L140.812,198.451L139.872,198.064L139.453,197.393L140.207,197.407L139.639,196.539L138.867,196.956L137.574,195.96L136.857,193.966L134.522,194.072L133.266,193.818L133.089,191.745L132.791,192.322L131.693,192.522L130.009,191.352L130.176,190.002L129.646,189.194L129.786,187.018L131.423,186.16L131.358,185.556L129.795,186.608L128.995,188.708L128.334,187.157L129.162,186.483L129.162,185.585L128.557,186.292L128.985,183.978L128.316,184.327L127.571,182.529L126.464,181.996L126.38,180.804L127.86,181.763L127.329,180.197L127.441,179.589L126.138,180.804L125.943,181.883L125.217,182.499L124.315,181.197L123.226,180.44L123.98,178.649L122.975,177.374L124.37,174.043L125.226,172.687L124.622,172.243L124.51,173.342L123.961,174.521L124.128,173.161L123.84,171.623ZM240.603,121.023L241.394,119.861L242.762,121.291L244.511,121.986L244.986,122.815L246.418,123.967L248.019,124.786L248.698,126.101L248.977,127.766L248.4,128.443L251.173,128.095L252.541,130.024L250.615,131.771L248.242,130.591L247.172,130.348L246.94,129.057L245.479,128.495L245.395,127.683L244.055,128.29L243.683,129.729L242.185,131.056L241.347,132.652L240.491,133.3L239.114,133.628L238.314,130.348L234.769,130.995L235.523,129.077L237.16,127.817L236.844,125.257L237.328,122.56L237.514,120.056L237.905,118.255L238.966,116.908L240.119,118.767L239.775,119.472ZM302.153,211.71L302.767,211.691L302.274,212.605L303.204,212.342L303.818,211.62L303.111,211.665L304.237,210.338L305.354,210.909L305.456,211.633L304.014,212.785L301.688,213.08L301.148,211.717L302.758,208.517L303.958,207.736L304.153,208.74L303.521,210.863ZM286.596,214.568L285.693,214.18L285.795,212.971L284.893,212.612L284.828,207.433L283.721,206.429L282.195,206.978L281.125,205.985L279.143,208.845L278.519,210.565L278.398,211.852L277.347,213.163L276.844,214.231L275.737,214.129L275.244,215.159L266.991,215.178L269.968,213.631L271.001,211.465L274.248,209.139L275.905,208.668L277.821,207.624L280.25,204.6L281.785,202.855L283.721,201.488L285.47,200.59L289.043,199.18L290.736,198.967L292.513,199.263L293.993,200.331L293.341,200.645L294.039,201.237L293.769,202.281L291.415,203.836L289.694,203.191L288.391,203.662L290.131,204.459L290.838,205.127L292.085,204.513L292.858,204.98L292.318,206.343L291.267,207.361L292.523,207.519L292.327,208.17L293.267,210.604L294.886,210.883L294.523,211.42L296.496,212.425L298.031,212.464L298.589,212.907L299.957,211.994L300.162,212.56L301.148,212.663L301.697,213.573L301.232,213.848L302.339,214.122L298.515,215.761L296.468,216.494L295.695,216.343L295.286,217.061L294.672,216.482L293.797,217.212L293.956,217.607L292.439,219.288L291.239,220.003L291.192,220.424L290.178,220.387L289.796,219.549L289.173,219.481L289.005,218.296L289.247,217.488L290.392,216.065L292.337,214.746L293.816,214.059L293.751,214.683L296.3,213.854L294.449,213.682L292.309,213.816L293.853,212.11L293.137,212.194L292.346,212.888L289.796,214.371L289.229,214.25L288.363,214.842L287.247,214.943ZM316.742,189.757L316.426,190.377L315.263,190.621L315.868,191.838L313.551,195.799L313.225,197.587L314.705,195.68L314.928,196.281L316.566,196.051L315.244,197.227L315.682,197.365L315.123,198.23L317.394,198.113L317.301,199.235L319.301,197.919L319.357,198.719L320.622,198.271L321.497,198.747L321.618,199.462L320.101,200.856L321.302,201.278L320.343,202.294L321.674,202.051L322.958,201.359L322.753,202.362L321.525,203.117L321.702,203.501L320.874,204.693L321.544,205.22L322.372,203.93L323.451,203.487L322.651,205.26L322.781,206.018L323.665,204.807L324,205.653L322.809,209.048L321.506,208.956L321.609,207.242L320.325,208.426L320.064,208.203L320.855,206.277L320.548,204.86L320.018,204.459L319.059,206.323L318.306,206.283L317.115,208.104L315.896,208.249L315.765,207.473L316.659,207.136L317.44,206.038L318.268,205.573L316.984,205.227L316.808,205.839L315.7,205.726L315.719,204.62L314.779,205.187L312.89,205.56L309.317,205.167L307.289,205.573L306.656,204.439L306.889,203.937L309.327,201.895L307.159,201.895L308.331,201.597L309.131,199.688L309.922,199.715L310.229,199.111L309.624,198.492L310.136,197.871L310.722,198.078L310.369,197.241L311.997,193.21L313.411,190.843L315.282,189.627L316.147,190.031ZM300.357,199.654L299.268,199.708L297.147,199.132L295.789,198.444L294.97,197.414L293.537,196.733L294.328,196.274L297.622,197.22L300.311,198.898ZM295.156,209.752L295.491,209.4L296.924,209.928L299.417,209.681L299.78,209.928L298.478,210.747L298.468,211.588L297.566,211.497L297.119,210.494L296.542,210.928L295.602,210.643L295.295,210.019L294.384,209.915L293.667,209.106L294.691,207.512L294.439,208.596ZM248.149,134.677L247.851,136.385L245.525,138.858L243.757,139.137L243.236,137.379L244.595,134.963ZM254.495,137.738L255.165,138.646L255.062,139.875L254.178,141.966L253.583,142.042L252.606,140.8L252.708,139.175L253.657,137.776ZM251.424,184.661L250.708,184.602L248.047,183.367L248.54,182.776L250.382,182.694L251.341,183.911ZM256.346,169.549L256.346,169.549L256.346,169.549ZM256.067,168.985L255.453,170.753L255.435,169.235L254.848,170.521L253.927,171.113L254.616,169.791L253.564,170.817L253.313,170.529L254.569,168.702L254.718,169.243L255.202,167.418L256.002,168.256ZM253.378,169.259L253.378,169.259L253.378,169.259ZM121.691,177.111L121.691,177.111L121.691,177.111ZM121.43,187.989L121.43,187.989L121.43,187.989ZM123.477,179.414L123.096,179.916L122.416,179.269L123.058,178.856ZM124.482,182.859L122.751,181.227L122.919,180.849L124.231,181.695ZM122.603,175.817L123.533,174.662L123.189,175.615ZM127.832,183.837L127.943,185.637L127.506,186.608L127.329,184.594L126.929,184.972L126.222,183.732L126.585,182.371L127.627,183.098ZM134.187,198.623L134.187,198.623L134.187,198.623ZM139.202,197.919L139.202,197.919L139.202,197.919ZM132.772,197.622L132,197.171L132.521,196.671ZM136.531,195.652L136.085,194.783L136.504,194.467ZM126.836,185.674L126.836,185.674L126.836,185.674ZM129.451,190.024L129.451,190.024L129.451,190.024ZM128.306,186.138L128.12,184.876L128.623,184.505ZM125.859,183.613L125.859,183.613L125.859,183.613ZM126.241,183.076L126.241,183.076L126.241,183.076ZM141.053,200.985L141.053,200.985L141.053,200.985ZM305.558,219.033L305.558,219.033L305.558,219.033ZM302.525,213.394L302.525,213.394L302.525,213.394ZM300.059,206.667L300.031,206.131L300.915,205.613ZM293.36,204.359L293.36,204.359L293.36,204.359ZM293.444,204.078L293.444,204.078L293.444,204.078ZM288.791,217.758L288.791,217.758L288.791,217.758ZM287.535,216.349L287.535,216.349L287.535,216.349ZM269.95,213.471L268.926,213.567L270.182,212.599ZM269.615,213.035L269.615,213.035L269.615,213.035ZM276.509,208.229L276.509,208.229L276.509,208.229ZM316.547,193.125L316.547,193.125L316.547,193.125ZM319.087,197.684L319.087,197.684L319.087,197.684ZM317.003,188.287L317.003,188.287L317.003,188.287ZM320.278,197.067L320.278,197.067L320.278,197.067ZM319.934,206.065L319.934,206.065L319.934,206.065ZM292.541,136.912L293.593,137.311L292.346,137.689ZM283.73,149.432L283.46,148.816L284.102,147.623L284.735,148.653ZM278.296,136.97L277.179,136.698L276.23,135.111L278.017,135.926ZM292.523,143.471L291.071,142.409L290.969,141.938L292.634,141.872ZM292.011,140.686L292.011,140.686L292.011,140.686ZM281.339,155.576L281.339,155.576L281.339,155.576ZM293.621,148.78L292.578,148.553L292.997,148.007ZM302.441,170.04L302.441,170.04L302.441,170.04ZM300.506,162.886L300.506,162.886L300.506,162.886ZM253.657,166.601L253.657,166.601L253.657,166.601ZM254.048,163.07L254.048,163.07L254.048,163.07ZM254.56,167.157L254.56,167.157L254.56,167.157ZM253.481,182.266L253.481,182.266L253.481,182.266ZM254.914,188.025L254.234,187.785L255.202,187.457ZM141.221,200.467L141.221,200.467L141.221,200.467ZM137.071,195.925L137.071,195.925L137.071,195.925ZM258.803,131.72L259.677,132.782L258.635,133.767L257.175,131.831ZM252.578,152.62L252.578,152.62L252.578,152.62ZM253.155,151.864L253.155,151.864L253.155,151.864ZM268.824,136.581L268.824,136.581L268.824,136.581ZM257.109,146.882L257.109,146.882L257.109,146.882ZM261.901,132.162L260.133,131.036L260.729,130.49L261.966,131.529ZM259.408,128.679L259.408,128.679L259.408,128.679ZM243.692,117.676L244.958,118.19L244.706,118.724L242.678,117.83L241.924,115.561L243.748,116.897ZM241.236,119.071L240.212,118.048L240.008,116.292L240.557,116.336L241.422,118.55ZM219.603,140.876L219.603,140.876L219.603,140.876Z", "Belize": "M229.642,298.902L229.707,298.483L230.554,298.497L231.289,297.188L231.875,297.117L232.387,298.072L231.941,299.458L231.829,302.101L230.843,303.14L230.331,304.102L229.447,304.092ZM232.769,298.605L232.769,298.605L232.769,298.605ZM233.02,299.966L233.02,299.966L233.02,299.966Z", "Barbados": "M306.321,311.601L306.321,311.601L306.321,311.601Z", "The Bahamas": "M259.37,281.075L259.622,281.395L259.584,282.519L259.082,282.48L258.486,281.159ZM260.487,276.354L260.031,276.004L260.431,275.625L260.543,274.669L259.696,273.468L260.896,274.548ZM271.336,289.642L270.983,290.234L269.699,290.349L269.652,289.888L270.313,289.613ZM259.147,279.773L259.147,280.469L258.375,280.967L257.361,280.001L258.077,278.878L258.552,278.7ZM257.212,273.971L258.635,273.931L256.756,274.618L256.421,274.398ZM260.171,278.898L260.171,278.898L260.171,278.898ZM268.675,285.375L268.675,285.375L268.675,285.375ZM267.717,281.586L267.717,281.586L267.717,281.586ZM268.294,286.798L268.294,286.798L268.294,286.798ZM261.976,277.549L261.976,277.549L261.976,277.549ZM264.525,283.332L264.525,283.332L264.525,283.332ZM266.656,284.893L265.66,284.133L265.837,283.654ZM265.446,281.213L265.446,281.213L265.446,281.213ZM271.308,286.196L271.308,286.196L271.308,286.196ZM271.625,288.77L271.625,288.77L271.625,288.77Z", "Antigua and Barbuda": "M300.571,301.009L300.571,301.009L300.571,301.009ZM300.497,299.557L300.497,299.557L300.497,299.557Z"};
+const COUNTRY_CENTROIDS = {"United States": [152.2, 191.3], "Trinidad and Tobago": [301.7, 318.6], "Saint Lucia": [302.5, 309.3], "Saint Kitts and Nevis": [298.3, 300.6], "Panama": [253, 323.6], "Nicaragua": [240.3, 312.2], "Mexico": [194.7, 281.3], "Jamaica": [260.3, 298], "Honduras": [236.2, 307], "Haiti": [272.3, 295.9], "Guatemala": [226.6, 304.6], "Grenada": [300.6, 314.4], "El Salvador": [230.4, 309.9], "Dominican Republic": [277.8, 295.9], "Dominica": [301.5, 305.3], "Cuba": [255.9, 288.4], "Costa Rica": [242.5, 319.8], "Canada": [193.9, 152.8], "Belize": [230.8, 300.6], "Barbados": [306.3, 311.6], "The Bahamas": [260.8, 280.7], "Antigua and Barbuda": [300.5, 300.3]};
+const POINT_COORDS = {"Rocky Mountains": [175.8, 215.2], "Grand Canyon": [170.4, 245.5], "Great Lakes": [245.6, 215.2], "Yucat\u00e1n Peninsula": [230.1, 292.9], "Isthmus of Panama": [254.1, 322.4], "Mississippi River": [226.2, 252.2], "Baja California Peninsula": [168, 273.2], "Appalachian Mountains": [250.7, 241], "Great Plains": [201.6, 229.3], "Central American Volcanic Arc": [229.3, 310.2], "Tundra": [201.6, 140], "Boreal Forest (Taiga)": [209.4, 183.6], "Desert (e.g., Sonoran, Chihuahuan)": [170.6, 258.3], "Everglades": [251, 276.7], "Tropical Rainforest": [243, 319.7], "Prairie / Grassland": [199, 207.7], "Turquoise, warm tropical water": [289.5, 298.4], "Alpine zone": [186.1, 234.4], "Saint Vincent and the Grenadines": [301.9, 311.2]};
+const INSET_W = 170, INSET_H = 300;
+const INSET_PATHS = {"Trinidad and Tobago": "M97.844,245.471L96.009,245.832L96.253,244.449L99.434,242.043L104.449,240.479L105.672,240.419L104.938,242.524ZM89.159,281.603L83.654,283.521L69.221,284L63.349,283.281L58.824,283.82L67.019,279.626L67.998,277.828L71.545,277.468L72.646,276.929L73.747,267.633L72.646,264.153L67.998,262.052L67.386,261.392L69.465,260.371L73.747,259.831L76.927,258.69L83.654,258.45L86.835,257.489L92.339,257.189L88.425,263.072L88.914,266.973L88.303,269.553L89.037,272.852L90.627,275.07L89.526,277.169Z", "Saint Lucia": "M93.073,153.446L91.238,157.151L87.446,154.843L87.079,151.928L87.446,150.166L89.648,146.883L91.483,144.695L92.706,143.965L93.44,146.823Z", "Saint Kitts and Nevis": "M37.54,37.142L35.827,37.883L34.36,36.834L34.726,34.364L36.072,34.303L37.418,35.414ZM34.115,32.944L33.259,33.438L31.668,31.276L29.222,30.659L27.02,29.361L27.51,27.692L28.61,27.136L31.302,28.867Z", "Grenada": "M65.184,216.568L62.982,216.689L63.839,215.422L64.083,213.19L65.306,210.535L67.141,208.725L68.976,209.208L68.242,215.12Z", "Dominica": "M79.985,103.356L76.805,104.151L75.459,98.035L73.257,93.629L73.991,89.832L78.639,91.547L80.107,93.567L80.963,99.014Z", "Barbados": "M140.778,179.344L139.799,180.01L136.741,178.617L135.64,176.921L135.518,171.589L137.353,171.104L140.9,175.346L142.98,176.86Z", "Antigua and Barbuda": "M65.184,40.104L64.083,41.523L60.291,40.968L59.435,37.945L61.759,35.414L64.45,36.525L66.285,37.945ZM64.206,21.014L63.716,21.942L60.903,20.209L60.047,17.053L60.536,16L63.105,16.867L64.083,17.919Z"};
+const INSET_CENTROIDS = {"Trinidad and Tobago": [80.5, 270.4], "Saint Lucia": [90.6, 150.9], "Saint Kitts and Nevis": [32.3, 32], "Grenada": [66.4, 212.9], "Dominica": [77.4, 96.7], "Barbados": [138.5, 175.9], "Antigua and Barbuda": [62.5, 31.4]};
+const INSET_POINT_COORDS = {"Saint Vincent and the Grenadines": [82.8, 173.5]};
+
+const INSET_KEY_SET = new Set([...Object.keys(INSET_PATHS), "Saint Vincent and the Grenadines"]);
+
+function centerOf(key){ return POINT_COORDS[key] || COUNTRY_CENTROIDS[key] || null; }
+function insetCenterOf(key){ return INSET_POINT_COORDS[key] || INSET_CENTROIDS[key] || null; }
+
+function markerState(key, currentKey){
+  if(key === currentKey) return 'current';
+  const v = state.visited[key];
+  if(v === 'correct') return 'correct';
+  if(v === 'wrong') return 'wrong';
+  return 'unvisited';
+}
+
+const STATE_FILL = {
+  current: "var(--coral)",
+  correct: "var(--ok)",
+  wrong: "var(--bad)",
+  unvisited: "var(--map-land)"
+};
+const STATE_DOT_FILL = {
+  current: "var(--coral)",
+  correct: "var(--ok)",
+  wrong: "var(--bad)",
+  unvisited: "var(--map-land-line)"
+};
+
+function routeLine(points){
+  if(points.length < 2) return "";
+  const d = "M" + points.map(p=>`${p[0]},${p[1]}`).join(" L");
+  return `<path d="${d}" fill="none" stroke="var(--coral)" stroke-width="1.6" stroke-dasharray="4,3" opacity="0.75"/>`;
+}
+
+/* Renders the persistent "board": every location that's part of this
+   quiz session stays visible the whole time. Countries are shaded by
+   status (current stop / answered correctly / missed / still ahead);
+   landform & landscape features get a status-colored dot instead
+   since they aren't political boundaries. A dashed trail connects the
+   stops in the order they were visited, like a trade-route map. */
+function renderBoard(currentKey){
+  const boardKeys = state.boardKeys;
+  const boardSet = new Set(boardKeys);
+
+  const mainCountries = Object.entries(COUNTRY_PATHS).map(([key, d])=>{
+    const onBoard = boardSet.has(key);
+    const fill = onBoard ? STATE_FILL[markerState(key, currentKey)] : "var(--map-land)";
+    const strokeW = (onBoard && key === currentKey) ? 1.6 : 1;
+    return `<path d="${d}" fill="${fill}" stroke="var(--map-land-line)" stroke-width="${strokeW}" data-key="${key}"/>`;
+  }).join("");
+
+  const mainPointKeys = boardKeys.filter(k => !COUNTRY_PATHS[k] && !INSET_KEY_SET.has(k) && POINT_COORDS[k]);
+  const mainPoints = mainPointKeys.map(key=>{
+    const st = markerState(key, currentKey);
+    const p = POINT_COORDS[key];
+    const r = st === 'current' ? 6 : 3.2;
+    return `<circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${STATE_DOT_FILL[st]}" stroke="#fff" stroke-width="0.8"/>`;
+  }).join("");
+
+  const mainLabelKeys = boardKeys.filter(k => (COUNTRY_CENTROIDS[k] || POINT_COORDS[k]) && !INSET_KEY_SET.has(k))
+    .filter(k => k === currentKey || state.visited[k]);
+  const mainLabels = mainLabelKeys.map(key=>{
+    const p = POINT_COORDS[key] || COUNTRY_CENTROIDS[key];
+    return `<text x="${p[0]}" y="${p[1]-8}" class="map-label">${key}</text>`;
+  }).join("");
+
+  const mainRoutePts = state.visitOrder.filter(k=>!INSET_KEY_SET.has(k)).map(centerOf).filter(Boolean);
+  if(currentKey && !INSET_KEY_SET.has(currentKey)){
+    const cp = centerOf(currentKey);
+    if(cp && mainRoutePts.length && (mainRoutePts[mainRoutePts.length-1] !== cp)) mainRoutePts.push(cp);
+  }
+
+  const mainSvg = `<svg viewBox="0 0 ${MAP_W} ${MAP_H}" class="map-svg" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${MAP_W}" height="${MAP_H}" fill="var(--map-water)"/>
+    ${mainCountries}
+    ${routeLine(mainRoutePts)}
+    ${mainPoints}
+    ${mainLabels}
+  </svg>`;
+
+  const showInset = boardKeys.some(k => INSET_KEY_SET.has(k));
+  let insetSvg = "";
+  if(showInset){
+    const insetCountries = Object.entries(INSET_PATHS).map(([key, d])=>{
+      const onBoard = boardSet.has(key);
+      const fill = onBoard ? STATE_FILL[markerState(key, currentKey)] : "var(--map-land)";
+      return `<path d="${d}" fill="${fill}" stroke="var(--map-land-line)" stroke-width="0.8" data-key="${key}"/>`;
+    }).join("");
+    const insetPointKeys = boardKeys.filter(k => INSET_KEY_SET.has(k) && !INSET_PATHS[k] && INSET_POINT_COORDS[k]);
+    const insetPoints = insetPointKeys.map(key=>{
+      const st = markerState(key, currentKey);
+      const p = INSET_POINT_COORDS[key];
+      const r = st === 'current' ? 5 : 2.6;
+      return `<circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${STATE_DOT_FILL[st]}" stroke="#fff" stroke-width="0.7"/>`;
+    }).join("");
+    const insetLabelKeys = boardKeys.filter(k => INSET_KEY_SET.has(k) && (k === currentKey || state.visited[k]));
+    const insetLabels = insetLabelKeys.map(key=>{
+      const p = INSET_POINT_COORDS[key] || INSET_CENTROIDS[key];
+      return p ? `<text x="${p[0]}" y="${p[1]-6}" class="map-label small">${key}</text>` : "";
+    }).join("");
+    const insetRoutePts = state.visitOrder.filter(k=>INSET_KEY_SET.has(k)).map(insetCenterOf).filter(Boolean);
+    if(currentKey && INSET_KEY_SET.has(currentKey)){
+      const cp = insetCenterOf(currentKey);
+      if(cp && insetRoutePts.length && (insetRoutePts[insetRoutePts.length-1] !== cp)) insetRoutePts.push(cp);
+    }
+    insetSvg = `
+      <div class="inset-label">Eastern Caribbean detail</div>
+      <svg viewBox="0 0 ${INSET_W} ${INSET_H}" class="map-svg inset" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${INSET_W}" height="${INSET_H}" fill="var(--map-water)"/>
+        ${insetCountries}
+        ${routeLine(insetRoutePts)}
+        ${insetPoints}
+        ${insetLabels}
+      </svg>`;
+  }
+
+  return mainSvg + insetSvg;
+}
+
+/* ============================================================
+   QUESTION DATA
+   ============================================================ */
+const FLAG_QS = [
+  {country:"Canada", question:"Which country's flag is this?", options:["Canada","United States","Mexico","Panama"], answer:0},
+  {country:"United States", question:"Which country's flag is this?", options:["Cuba","Panama","United States","Liberia"], answer:2},
+  {country:"Mexico", question:"Which country's flag is this?", options:["Italy","Mexico","Hungary","Bulgaria"], answer:1},
+  {country:"Guatemala", question:"Which Central American country's flag is this?", options:["Guatemala","El Salvador","Honduras","Nicaragua"], answer:0},
+  {country:"Belize", question:"Which country's flag is this?", options:["Jamaica","Belize","Guyana","Suriname"], answer:1},
+  {country:"Honduras", question:"Which country's flag is this?", options:["El Salvador","Nicaragua","Honduras","Ecuador"], answer:2},
+  {country:"El Salvador", question:"Which country's flag is this?", options:["El Salvador","Guatemala","Costa Rica","Honduras"], answer:0},
+  {country:"Nicaragua", question:"Which country's flag is this?", options:["Costa Rica","Nicaragua","El Salvador","Argentina"], answer:1},
+  {country:"Costa Rica", question:"Which country's flag is this?", options:["Nicaragua","Cuba","Costa Rica","Thailand"], answer:2},
+  {country:"Panama", question:"Which country's flag is this?", options:["Panama","Puerto Rico","Cuba","Dominican Republic"], answer:0},
+  {country:"Cuba", question:"Which Caribbean country's flag is this?", options:["Puerto Rico","Cuba","Chile","Texas"], answer:1},
+  {country:"Jamaica", question:"Which country's flag is this?", options:["Ethiopia","South Africa","Jamaica","Grenada"], answer:2},
+  {country:"Haiti", question:"Which country's flag is this?", options:["Haiti","Liechtenstein","Romania","Dominican Republic"], answer:0},
+  {country:"Dominican Republic", question:"Which country's flag is this?", options:["Haiti","Dominican Republic","Panama","Cuba"], answer:1},
+  {country:"The Bahamas", question:"Which country's flag is this?", options:["Jamaica","Barbados","The Bahamas","Belize"], answer:2},
+  {country:"Saint Kitts and Nevis", question:"Which country's flag is this?", options:["Saint Kitts and Nevis","Trinidad and Tobago","Tanzania","Kenya"], answer:0},
+  {country:"Antigua and Barbuda", question:"Which country's flag is this?", options:["Bahamas","Antigua and Barbuda","Barbados","Trinidad and Tobago"], answer:1},
+  {country:"Barbados", question:"Which country's flag is this?", options:["Sweden","Ukraine","Barbados","Argentina"], answer:2},
+  {country:"Dominica", question:"Which country's flag is this?", options:["Dominican Republic","Dominica","Grenada","Belize"], answer:1},
+  {country:"Saint Lucia", question:"Which country's flag is this?", options:["Argentina","Guatemala","El Salvador","Saint Lucia"], answer:3},
+  {country:"Saint Vincent and the Grenadines", question:"Which country's flag is this?", options:["Grenada","Saint Vincent and the Grenadines","Saint Lucia","Barbados"], answer:1},
+  {country:"Grenada", question:"Which country's flag is this?", options:["Saint Kitts and Nevis","Trinidad and Tobago","Grenada","Antigua and Barbuda"], answer:2},
+  {country:"Trinidad and Tobago", question:"Which country's flag is this?", options:["Saint Kitts and Nevis","Cuba","Panama","Trinidad and Tobago"], answer:3},
+];
+
+const ANIMAL_QS = [
+  {country:"Canada", icon:"Beaver", question:"This is Canada's official national animal. What is it?", options:["Moose","Beaver","Polar Bear","Loon"], answer:1, explain:"The beaver was declared Canada's national animal in 1975, a nod to its role in the fur trade that shaped the country's early economy."},
+  {country:"United States", icon:"Bald Eagle", question:"This is the national bird of the United States. What species is it?", options:["Golden Eagle","Bald Eagle","Osprey","Wild Turkey"], answer:1, explain:"The Bald Eagle was adopted as the national bird symbol in 1782 and appears on the Great Seal."},
+  {country:"Mexico", icon:"Golden Eagle", question:"This eagle appears on Mexico's coat of arms and flag. Which species is it?", options:["Bald Eagle","Golden Eagle","Quetzal","Condor"], answer:1, explain:"The Golden Eagle appears on Mexico's flag, clutching a serpent while perched on a cactus, based on an Aztec legend."},
+  {country:"Guatemala", icon:"Resplendent Quetzal", question:"This brilliantly colored bird is Guatemala's national symbol (and its currency's namesake). What is it?", options:["Resplendent Quetzal","Scarlet Macaw","Toucan","Harpy Eagle"], answer:0, explain:"The Resplendent Quetzal, sacred to the ancient Maya, gives its name to Guatemala's currency, the quetzal."},
+  {country:"Belize", icon:"Baird's Tapir", question:"Belize's national animal is a large, shy mammal often called the 'mountain cow.' What is it?", options:["Jaguar","Baird's Tapir","Howler Monkey","Manatee"], answer:1, explain:"Baird's Tapir is Belize's national animal — the largest land mammal in Central America."},
+  {country:"Honduras", icon:"Scarlet Macaw", question:"This colorful bird is Honduras's national bird. What is it?", options:["Scarlet Macaw","Quetzal","Flamingo","Toucan"], answer:0, explain:"The Scarlet Macaw was declared Honduras's national bird in 1993."},
+  {country:"El Salvador", icon:"Turquoise-browed Motmot", question:"El Salvador's national bird is locally called the 'Torogoz.' What species is it?", options:["Turquoise-browed Motmot","Resplendent Quetzal","Roseate Spoonbill","Keel-billed Toucan"], answer:0, explain:"The Torogoz is the Turquoise-browed Motmot — a bird so admired it cannot survive in captivity, symbolizing freedom."},
+  {country:"Nicaragua", icon:"Turquoise-browed Motmot", question:"In Nicaragua, this same species is called the 'Guardabarranco.' Which bird is it?", options:["Scarlet Ibis","Turquoise-browed Motmot","Cuban Trogon","Green Jay"], answer:1, explain:"Nicaragua and El Salvador share the Turquoise-browed Motmot as their national bird, just under different local names."},
+  {country:"Costa Rica", icon:"Clay-colored Thrush", question:"Costa Rica's national bird, the 'Yigüirro,' is known in English as the:", options:["Clay-colored Thrush","Resplendent Quetzal","Blue-crowned Motmot","Keel-billed Toucan"], answer:0, explain:"The Clay-colored Thrush's song is said to announce the start of the rainy season in Costa Rica."},
+  {country:"Panama", icon:"Harpy Eagle", question:"This powerful raptor is Panama's national bird. What is it?", options:["Bald Eagle","Andean Condor","Harpy Eagle","Peregrine Falcon"], answer:2, explain:"The Harpy Eagle is one of the world's largest and most powerful eagles and appears on Panama's coat of arms."},
+  {country:"Cuba", icon:"Cuban Trogon", question:"Cuba's national bird, the Tocororo, is a type of:", options:["Trogon","Parrot","Hummingbird","Woodpecker"], answer:0, explain:"The Cuban Trogon (Tocororo) displays red, white, and blue feathers — the same colors as Cuba's flag."},
+  {country:"Jamaica", icon:"Doctor Bird", question:"Jamaica's national bird is nicknamed the 'Doctor Bird.' What kind of bird is it?", options:["Hummingbird","Woodpecker","Parrot","Heron"], answer:0, explain:"The Red-billed Streamertail, or 'Doctor Bird,' is a hummingbird found only in Jamaica."},
+  {country:"The Bahamas", icon:"Caribbean Flamingo", question:"The Bahamas' national bird is famous for its bright pink color. Which bird is it?", options:["Roseate Spoonbill","Caribbean Flamingo","Scarlet Ibis","Pink Cockatoo"], answer:1, explain:"The Caribbean Flamingo is the Bahamas' national bird, with a major nesting colony on Great Inagua island."},
+  {country:"Haiti", icon:"Hispaniolan Trogon", question:"Haiti's national bird lives only on the island it shares with the Dominican Republic. What is it?", options:["Hispaniolan Trogon","Cuban Trogon","Palmchat","Resplendent Quetzal"], answer:0, explain:"The Hispaniolan Trogon is found only on Hispaniola, the island shared by Haiti and the Dominican Republic."},
+  {country:"Dominican Republic", icon:"Palmchat", question:"The Dominican Republic's national bird, the 'Cigua Palmera,' is known in English as the:", options:["Palmchat","Clay-colored Thrush","Hispaniolan Trogon","Bananaquit"], answer:0, explain:"The Palmchat is the only member of its bird family and builds huge shared nests in palm trees."},
+  {country:"Trinidad and Tobago", icon:"Scarlet Ibis", question:"This bright red wading bird is the national bird of Trinidad. What is it?", options:["Roseate Spoonbill","Scarlet Ibis","Caribbean Flamingo","Scarlet Macaw"], answer:1, explain:"The Scarlet Ibis represents Trinidad, while the Cocrico represents Tobago — together they're Trinidad and Tobago's two national birds."},
+  {country:"Barbados", icon:"Brown Pelican", question:"Barbados' national bird appears on its coat of arms, named after 'Pelican Island.' Which bird is it?", options:["Brown Pelican","Caribbean Flamingo","Frigatebird","Booby"], answer:0, explain:"The Brown Pelican is Barbados' national bird, commemorating a small island absorbed into the Deep Water Harbour development."},
+  {country:"Grenada", icon:"Grenada Dove", question:"Grenada's national bird is a rare dove found almost nowhere else on Earth. What is it?", options:["Grenada Dove","Zenaida Dove","Mourning Dove","Ground Dove"], answer:0, explain:"The Grenada Dove is critically endangered and found only on the island of Grenada."},
+  {country:"Saint Lucia", icon:"Saint Lucia Parrot", question:"Which colorful parrot, found only on the island, is Saint Lucia's national bird?", options:["Saint Lucia Parrot","Sisserou Parrot","Saint Vincent Parrot","Hispaniolan Parrot"], answer:0, explain:"The Saint Lucia Parrot (also called the Jacquot) is endemic to the island's rainforests."},
+  {country:"Dominica", icon:"Sisserou Parrot", question:"Dominica's national bird, the Sisserou Parrot, even appears on the country's flag. What is another name for it?", options:["Imperial Amazon","Saint Vincent Parrot","Hispaniolan Parrot","Cuban Amazon"], answer:0, explain:"The Sisserou (Imperial Amazon) is found only in Dominica's mountain rainforests and is the only national bird featured on a national flag."},
+  {country:"Saint Vincent and the Grenadines", icon:"Saint Vincent Parrot", question:"Which multicolored parrot, native only to its mountain forests, is the national bird of Saint Vincent and the Grenadines?", options:["Saint Vincent Parrot","Saint Lucia Parrot","Sisserou Parrot","Cuban Amazon"], answer:0, explain:"The Saint Vincent Parrot comes in several color forms and is found only on the island of Saint Vincent."},
+  {country:"Antigua and Barbuda", icon:"Magnificent Frigatebird", question:"This large seabird, with males showing a bright red throat pouch, is the national bird of Antigua and Barbuda. What is it?", options:["Magnificent Frigatebird","Brown Pelican","Booby","Caribbean Flamingo"], answer:0, explain:"Barbuda's Frigate Bird Sanctuary hosts one of the largest colonies of Magnificent Frigatebirds in the world."},
+  {country:"Saint Kitts and Nevis", icon:"Brown Pelican", question:"Which bird, also Barbados' national bird, represents Saint Kitts and Nevis?", options:["Brown Pelican","Caribbean Flamingo","Scarlet Ibis","Frigatebird"], answer:0, explain:"The Brown Pelican is the national bird of Saint Kitts and Nevis as well as Barbados."},
+];
+
+const LANDFORM_QS = [
+  {icon:"Rocky Mountains", question:"Which major mountain range runs down the western side of North America, from Canada into the United States?", options:["Appalachian Mountains","Rocky Mountains","Sierra Madre","Andes"], answer:1},
+  {icon:"Grand Canyon", question:"The Colorado River carved which enormous landform in Arizona?", options:["Death Valley","Grand Canyon","Great Basin","Black Canyon"], answer:1},
+  {icon:"Great Lakes", question:"Which group of five massive freshwater lakes lies along the US–Canada border?", options:["The Great Lakes","The Finger Lakes","The Salt Lakes","The Boundary Lakes"], answer:0},
+  {icon:"Yucatán Peninsula", question:"Which Mexican peninsula is known for its ancient Maya ruins and sinkhole lakes called cenotes?", options:["Baja California Peninsula","Yucatán Peninsula","Alaska Peninsula","Florida Peninsula"], answer:1},
+  {icon:"Isthmus of Panama", question:"What is the name of the narrow strip of land in Panama that connects North and South America?", options:["Isthmus of Panama","Isthmus of Tehuantepec","Panama Strait","Darién Bridge"], answer:0},
+  {icon:"Mississippi River", question:"Which major river flows through the central United States down to the Gulf of Mexico?", options:["Colorado River","Rio Grande","Mississippi River","Columbia River"], answer:2},
+  {icon:"Baja California Peninsula", question:"Which long, narrow peninsula extends south from California into Mexico?", options:["Yucatán Peninsula","Baja California Peninsula","Alaska Peninsula","Nova Scotia Peninsula"], answer:1},
+  {icon:"Appalachian Mountains", question:"Which older, rounded mountain range runs along the eastern United States and Canada?", options:["Rocky Mountains","Cascade Range","Appalachian Mountains","Sierra Nevada"], answer:2},
+  {icon:"Great Plains", question:"The wide, flat interior region of central North America, historically home to vast grasslands, is called the:", options:["Great Plains","Great Basin","Gulf Lowlands","Canadian Shield"], answer:0},
+  {icon:"Central American Volcanic Arc", question:"A chain of active volcanoes runs through which region of North America?", options:["Central American Volcanic Arc","Canadian Shield","Great Plains","Piedmont Plateau"], answer:0},
+];
+
+const LANDSCAPE_QS = [
+  {icon:"Tundra", question:"The far north of Canada and Alaska is dominated by which cold, treeless landscape?", options:["Tundra","Savanna","Chaparral","Steppe"], answer:0, explain:"Tundra landscapes have permanently frozen subsoil (permafrost) and support only low-growing plants like mosses and lichens."},
+  {icon:"Boreal Forest (Taiga)", question:"Much of Canada is covered by a vast belt of coniferous forest known as the:", options:["Rainforest","Boreal Forest (Taiga)","Cloud Forest","Chaparral"], answer:1, explain:"The boreal forest, or taiga, stretches across Canada and is one of the largest forest biomes on Earth."},
+  {icon:"Desert (e.g., Sonoran, Chihuahuan)", question:"Northern Mexico and the southwestern United States contain large stretches of which dry landscape?", options:["Desert (e.g., Sonoran, Chihuahuan)","Tundra","Rainforest","Wetland Marsh"], answer:0, explain:"The Sonoran and Chihuahuan Deserts feature cacti, extreme heat, and very little rainfall."},
+  {icon:"Everglades", question:"Southern Florida is home to a famous slow-moving marshy wetland called the:", options:["Everglades","Bayou","Pampas","Delta Marsh"], answer:0, explain:"The Everglades is technically a slow-moving 'river of grass' that drains into the Gulf of Mexico."},
+  {icon:"Tropical Rainforest", question:"Parts of Costa Rica, Panama, and southern Mexico contain dense, humid landscapes known as:", options:["Tropical Rainforest","Boreal Forest","Steppe","Tundra"], answer:0, explain:"Central America's tropical rainforests are among the most biodiverse landscapes on Earth."},
+  {icon:"Prairie / Grassland", question:"The flat, rolling grasslands of the central United States and Canada are called:", options:["Prairie / Grassland","Rainforest","Mangrove Swamp","Alpine Meadow"], answer:0, explain:"Prairies once covered huge areas of the continent's interior and are now largely farmland."},
+  {icon:"Turquoise, warm tropical water", question:"Many Caribbean islands are known for landscapes featuring coral reefs and this kind of water:", options:["Turquoise, warm tropical water","Icy fjords","Brackish estuaries","Glacial meltwater"], answer:0},
+  {icon:"Alpine zone", question:"High elevations of the Rocky Mountains feature a cold, rocky, treeless landscape called the:", options:["Alpine zone","Mangrove zone","Wetland zone","Savanna zone"], answer:0, explain:"Above the treeline, alpine landscapes are shaped by thin soil, strong winds, and short growing seasons."},
+];
+
+/* ============================================================
+   APP LOGIC
+   ============================================================ */
+const CATEGORIES = [
+  {key:"flags", name:"Flags", emoji:"🚩"},
+  {key:"animals", name:"National Animals", emoji:"🦅"},
+  {key:"landforms", name:"Landforms", emoji:"⛰️"},
+  {key:"landscapes", name:"Landscapes", emoji:"🌵"},
+  {key:"mixed", name:"Explorer Challenge", emoji:"🧭"},
+];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function tagQuestions(){
+  const flags = FLAG_QS.map(q=>({...q, cat:"Flags", visual:{type:"flag", key:q.country}, mapKey:q.country}));
+  const animals = ANIMAL_QS.map(q=>({...q, cat:"National Animals", visual:{type:"animal", key:q.icon}, mapKey:q.country}));
+  const landforms = LANDFORM_QS.map(q=>({...q, cat:"Landforms", visual:{type:"landform", key:q.icon}, mapKey:q.icon}));
+  const landscapes = LANDSCAPE_QS.map(q=>({...q, cat:"Landscapes", visual:{type:"landscape", key:q.icon}, mapKey:q.icon}));
+  return {flags, animals, landforms, landscapes};
+}
+
+let state = { queue: [], idx: 0, score: 0, catCounts: {}, categoryKey: "", boardKeys: [], visited: {}, visitOrder: [] };
+
+const screenPick = document.getElementById('screen-pick');
+const screenQuiz = document.getElementById('screen-quiz');
+const screenResults = document.getElementById('screen-results');
+const catGrid = document.getElementById('catGrid');
+
+function renderCatGrid(){
+  const {flags, animals, landforms, landscapes} = tagQuestions();
+  const counts = {flags:flags.length, animals:animals.length, landforms:landforms.length, landscapes:landscapes.length, mixed: flags.length+animals.length+landforms.length+landscapes.length};
+  catGrid.innerHTML = "";
+  CATEGORIES.forEach(cat=>{
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.innerHTML = `<span class="emoji">${cat.emoji}</span><span class="name">${cat.name}</span><br><span class="count">${counts[cat.key]} questions</span>`;
+    btn.addEventListener('click', ()=> startQuiz(cat.key));
+    catGrid.appendChild(btn);
+  });
+}
+renderCatGrid();
+
+function startQuiz(key){
+  const {flags, animals, landforms, landscapes} = tagQuestions();
+  let pool;
+  if(key === 'mixed') pool = shuffle([...flags, ...animals, ...landforms, ...landscapes]);
+  else if(key === 'flags') pool = shuffle(flags);
+  else if(key === 'animals') pool = shuffle(animals);
+  else if(key === 'landforms') pool = shuffle(landforms);
+  else pool = shuffle(landscapes);
+
+  state = { queue: pool, idx: 0, score: 0, catCounts: {}, categoryKey: key,
+             boardKeys: [...new Set(pool.map(q=>q.mapKey))], visited: {}, visitOrder: [] };
+  pool.forEach(q=>{
+    if(!state.catCounts[q.cat]) state.catCounts[q.cat] = {correct:0,total:0};
+    state.catCounts[q.cat].total++;
+  });
+
+  screenPick.classList.add('hidden');
+  screenResults.classList.add('hidden');
+  screenQuiz.classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = state.queue[state.idx];
+  document.getElementById('progressLabel').textContent = `Question ${state.idx+1} of ${state.queue.length}`;
+  document.getElementById('scoreLabel').textContent = `Score: ${state.score}`;
+  document.getElementById('progressFill').style.width = `${(state.idx/state.queue.length)*100}%`;
+  document.getElementById('qCategory').textContent = q.cat;
+  document.getElementById('qText').textContent = q.question;
+
+  const visualBox = document.getElementById('qVisualBox');
+  const visualEl = document.getElementById('qVisual');
+  const capEl = document.getElementById('qVisualCap');
+  visualBox.classList.remove('flag');
+
+  const iconTables = {animal: ANIMAL_ICONS, landform: LANDFORM_ICONS, landscape: LANDSCAPE_ICONS};
+  if(q.visual.type === "flag"){
+    visualBox.classList.add('flag');
+    capEl.textContent = "Mystery flag";
+  } else if(q.visual.type === "animal"){
+    capEl.textContent = `${q.country}'s national animal`;
+  } else if(q.visual.type === "landform"){
+    capEl.textContent = "Mystery landform";
+  } else {
+    capEl.textContent = "Mystery landscape";
+  }
+  setVisual(visualEl, q.visual.type, q.visual.key, iconTables);
+
+  document.getElementById('boardMap').innerHTML = renderBoard(q.mapKey);
+
+  const optsWrap = document.getElementById('qOptions');
+  optsWrap.innerHTML = "";
+  const explainEl = document.getElementById('qExplain');
+  explainEl.style.display = 'none';
+  explainEl.textContent = q.explain || "";
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = 'none';
+
+  q.options.forEach((opt, i)=>{
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.addEventListener('click', ()=> selectAnswer(i));
+    optsWrap.appendChild(b);
+  });
+}
+
+function selectAnswer(i){
+  const q = state.queue[state.idx];
+  const buttons = document.querySelectorAll('#qOptions .opt');
+  buttons.forEach(b=> b.disabled = true);
+
+  const correct = i === q.answer;
+  buttons[i].classList.add(correct ? 'correct' : 'wrong');
+  if(!correct) buttons[q.answer].classList.add('correct');
+
+  if(correct){
+    state.score++;
+    state.catCounts[q.cat].correct++;
+  }
+  state.visited[q.mapKey] = correct ? 'correct' : 'wrong';
+  state.visitOrder.push(q.mapKey);
+  document.getElementById('boardMap').innerHTML = renderBoard(q.mapKey);
+
+  if(q.explain){
+    document.getElementById('qExplain').style.display = 'block';
+  }
+  document.getElementById('scoreLabel').textContent = `Score: ${state.score}`;
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = 'inline-block';
+  nextBtn.textContent = (state.idx === state.queue.length-1) ? "See Results →" : "Next →";
+}
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  state.idx++;
+  if(state.idx >= state.queue.length){
+    showResults();
+  } else {
+    renderQuestion();
+  }
+});
+
+function showResults(){
+  document.getElementById('progressFill').style.width = `100%`;
+  screenQuiz.classList.add('hidden');
+  screenResults.classList.remove('hidden');
+
+  const total = state.queue.length;
+  document.getElementById('finalScore').textContent = `${state.score} / ${total}`;
+  const pct = Math.round((state.score/total)*100);
+  let msg;
+  if(pct === 100) msg = "Perfect score — true North America explorer!";
+  else if(pct >= 80) msg = "Excellent work — you know this continent well.";
+  else if(pct >= 60) msg = "Solid effort — a bit more map study and you'll ace it.";
+  else msg = "Good start — try again to sharpen your geography skills.";
+  document.getElementById('finalMsg').textContent = `${pct}% correct. ${msg}`;
+
+  const breakdown = document.getElementById('breakdown');
+  breakdown.innerHTML = "";
+  Object.entries(state.catCounts).forEach(([cat, c])=>{
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = `<span>${cat}</span><span>${c.correct} / ${c.total}</span>`;
+    breakdown.appendChild(row);
+  });
+}
+
+document.getElementById('retryBtn').addEventListener('click', ()=> startQuiz(state.categoryKey));
+document.getElementById('homeBtn').addEventListener('click', ()=>{
+  screenResults.classList.add('hidden');
+  screenPick.classList.remove('hidden');
+});
+</script>
+</body>
+</html>
